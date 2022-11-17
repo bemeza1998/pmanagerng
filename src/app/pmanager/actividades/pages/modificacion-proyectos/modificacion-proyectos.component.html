@@ -1,0 +1,74 @@
+<p-confirmDialog #cd [style]="{width: '50vw'}">
+    <ng-template pTemplate="footer">
+        <button type="button" pButton icon="pi pi-times" label="No" (click)="cd.reject()"></button>
+        <button type="button" pButton icon="pi pi-check" label="Si" (click)="cd.accept()"></button>
+    </ng-template>
+</p-confirmDialog>
+<p-toast></p-toast>
+<h2>Solicitudes cambios en proyectos</h2>
+<p-table [value]="proyectos" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
+    [rowsPerPageOptions]="[10,25,50]">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Acciones</th>
+            <th>Solicitud modificación</th>
+            <th>Comentario solicitud</th>
+            <th>Fecha solicitud</th>
+            <th>Usuario creador</th>
+            <th>Identificador</th>
+            <th>Nombre</th>
+            <th>Descripcion</th>
+            <th>Estado</th>
+            <th>Valor entrega</th>
+            <th>Días contrato</th>
+            <th>Valor día</th>
+            <th>Valor hora</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-proyecto>
+        <tr>
+            <td style="text-align:center">
+                <div *ngIf="proyecto.estadoSolicitudModificacion === 'SOL'; else eliminar">
+                    <button (click)="aprobar(proyecto, 'SOL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-primary mb-2">Aprobar
+                        modificación</button>
+                    <button (click)="rechazar(proyecto, 'SOL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-danger">Rechazar
+                        modificación</button>
+                </div>
+                <ng-template #eliminar>
+                    <button (click)="aprobar(proyecto, 'SEL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-primary mb-2">Aprobar
+                        eliminación</button>
+                    <button (click)="rechazar(proyecto, 'SEL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-danger">Rechazar
+                        eliminación</button>
+                </ng-template>
+            </td>
+            <td class=" text-right">
+                {{proyecto.estadoSolicitudModificacion | i18nSelect: estadoSolicitudMap}}
+            </td>
+            <td class="text-right">{{proyecto.comentarioSolicitudModificacion}}</td>
+            <td class="text-right">{{proyecto.fechaSolicitudModificacion | date: 'dd/MM/yyyy' }}</td>
+            <td class="text-right">{{proyecto.nombreUsuarioCompleto}}</td>
+            <td class="text-right">{{proyecto.identificadorProyecto}}</td>
+            <td class="text-right">{{proyecto.nombre}}</td>
+            <td class="text-right">{{proyecto.descripcion}}</td>
+            <td class="text-right">{{proyecto.estado}}</td>
+            <td class="text-right">{{proyecto.valorEntrega | currency}}</td>
+            <td class="text-right">{{proyecto.diasContrato}}</td>
+            <td class="text-right">{{proyecto.valorDia | number}}</td>
+            <td class="text-right">{{proyecto.valorHora | number}}</td>
+            <td class="text-right">{{proyecto.fechaInicio | date: 'dd/MM/yyyy' }}</td>
+            <td class="text-right">{{proyecto.fechaFinalizacion | date: 'dd/MM/yyyy' }}</td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="loadingbody">
+        <p-progressSpinner></p-progressSpinner>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <p>No se han encontrado registros con los parámetros indicados.</p>
+    </ng-template>
+</p-table>

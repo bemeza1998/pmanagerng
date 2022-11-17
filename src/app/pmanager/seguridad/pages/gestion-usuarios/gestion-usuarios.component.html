@@ -1,0 +1,98 @@
+<button pButton pRipple label="Crear usuario" class="min-w-min mx-3 w-3" (click)="showLoadDialog()"></button>
+<p-table [value]="usuarios" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
+    [rowsPerPageOptions]="[10,25,50]">
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th>#</th>
+            <th>Código usuario</th>
+            <th>Jefatura</th>
+            <th>Perfil</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Mail</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-i="rowIndex" let-usuario>
+        <tr>
+            <td>{{i + 1}}</td>
+            <td>{{usuario.codUsuario}}</td>
+            <td>{{usuario.codJefatura}}</td>
+            <td>{{usuario.codPerfil}}</td>
+            <td>{{usuario.nombre | titlecase}}</td>
+            <td>{{usuario.apellido | titlecase}}</td>
+            <td>{{usuario.mail}}</td>
+            <td>{{usuario.estado}}</td>
+            <td class=""><i class="pi pi-file-edit mr-3"></i> <i class="pi pi-trash"></i></td>
+
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="loadingbody">
+        <p-progressSpinner></p-progressSpinner>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <p>No se han encontrado registros con los parámetros indicados.</p>
+    </ng-template>
+</p-table>
+
+<p-dialog header="Carga de ordenes - Por teclado" [(visible)]="displayLoad" [breakpoints]="{'960px': '75vw'}"
+    [style]="{width: '50vw'}" [draggable]="true" [resizable]="false">
+    <form novalidate>
+        <div class="p-fluid">
+            <div class="field mt-2 px-4">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Código de usuario: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="text" pInputText placeholder="Código usuario" required [(ngModel)]="codUsuario"
+                                name="codUsuario">
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Jefatura: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <p-dropdown [options]="jefaturas" [(ngModel)]="codJefatura" placeholder="Jefaturas"
+                                name="codJefatura"></p-dropdown>
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Perfil: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <p-dropdown [options]="perfiles" [(ngModel)]="codPerfil" placeholder="Perfiles"
+                                name="codPerfil"></p-dropdown>
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Nombre: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="text" pInputText required [(ngModel)]="nombre" placeholder="Nombre"
+                                name="nombre">
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Apellido: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="text" pInputText required [(ngModel)]="apellido" placeholder="Apellido"
+                                name="apellido">
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Mail: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="email" pInputText required [(ngModel)]="mail" placeholder="Email" name="mail">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-content-end">
+            <p-button (click)="displayLoad=false" label="Crear" styleClass="p-buttont" (onClick)="keyboardSubmit()">
+            </p-button>
+            <p-button (click)="displayLoad=false" label="Cancelar" styleClass="p-button-text"></p-button>
+        </div>
+    </form>
+</p-dialog>

@@ -1,0 +1,146 @@
+<p-toast></p-toast>
+<h1>Caidad productos</h1>
+<div class="flex flex-column mb-4" style="width: 1000px;">
+    <div class="flex flex-row justify-content-around mt-3">
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Proyectos</p>
+            <p-dropdown [options]="proyectos" appendTo="body" [(ngModel)]="proyectoSeleccionado" placeholder="Proyectos"
+                optionLabel="nombre" optionValue="codProyecto"></p-dropdown>
+        </div>
+        <div class="flex flex-row m-auto">
+            <p class="pt-3 mr-5">Nombre creador</p>
+            <input pInputText required [(ngModel)]="nombreCreador" name="nombreCreador" placeholder="Nombre del creador"
+                type="text" />
+        </div>
+    </div>
+    <div class="flex flex-row justify-content-around mt-3">
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Porcentaje cumplimiento</p>
+            <input pInputText required [(ngModel)]="porcentajeCumplimiento" name="porcentajeCumplimiento"
+                placeholder="Porcentaje" type="number" />
+        </div>
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Mes</p>
+            <p-dropdown [options]="meses" (onChange)="llenarSemanas()" appendTo="body" [(ngModel)]="mesSeleccionado"
+                placeholder="Meses" optionLabel="nombre" optionValue="numero"></p-dropdown>
+        </div>
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Semana</p>
+            <p-dropdown [options]="semanas" appendTo="body" [(ngModel)]="semanaSeleccionada" placeholder="Semanas"
+                name="semanas"></p-dropdown>
+        </div>
+    </div>
+    <div class="flex flex-row justify-content-between mt-5">
+        <button pButton pRipple label="Consultar" (click)="consultar()" class="m-auto w-2"></button>
+        <button pButton pRipple label="Consultar todo" (click)="obtenerProductos()" class="m-auto w-2"></button>
+    </div>
+</div>
+<p-table [value]="productos" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
+    [rowsPerPageOptions]="[10,25,50]" dataKey="codProducto" editMode="row">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Acciones</th>
+            <th>Semana</th>
+            <th>Creador</th>
+            <th>Proyecto</th>
+            <th>Producto</th>
+            <th>Fecha estimada entrega</th>
+            <th>Horas Estimadas Producto</th>
+            <th>% Cumplimiento</th>
+            <th>Cronograma</th>
+            <th>Observaciones</th>
+            <th>Prod. Ent. a QA</th>
+            <th>Errores Rep. QA</th>
+            <th>Errores Corregidos</th>
+            <th>Prod. Apro. QA</th>
+            <th>Prod. Rech. QA</th>
+            <th>Observaciones QA</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-producto let-editing="editing" let-ri="rowIndex">
+        <tr [pEditableRow]="producto">
+            <td style="text-align:center">
+                <button *ngIf="!editing" pButton pRipple type="button" pInitEditableRow icon="pi pi-pencil"
+                    (click)="editar(producto)" class="p-button-rounded p-button-text"></button>
+                <button *ngIf="editing" pButton pRipple type="button" pSaveEditableRow icon="pi pi-check"
+                    (click)="guardarCambios(producto)"
+                    class="p-button-rounded p-button-text p-button-success mr-2"></button>
+                <button *ngIf="editing" pButton pRipple type="button" pCancelEditableRow icon="pi pi-times"
+                    (click)="cancelarCambios(producto, ri)"
+                    class="p-button-rounded p-button-text p-button-danger"></button>
+            </td>
+            <td class="text-right">{{producto.semana | date:'dd-MM-yyyy' }}</td>
+            <td class="text-right">{{producto.nombreUsuarioCompleto}}</td>
+            <td class="text-right">{{producto.proyecto.nombre}}</td>
+            <td class="text-right">{{producto.nombre}}</td>
+            <td class="text-right">{{producto.fechaEstimadaEntrega | date:'dd-MM-yyyy' }}</td>
+            <td class="text-right">{{producto.horasEstimadas}}</td>
+            <td class="text-right">{{producto.porcentajeCumplimiento}}</td>
+            <td class="text-right">{{producto.cronograma}}</td>
+            <td class="text-right">{{producto.observaciones}}</td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="producto.entregadoQa" type="number">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.entregadoQa}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="producto.qaErroresReportados" type="number">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.qaErroresReportados}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="producto.qaErroesCorregidos" type="number">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.qaErroesCorregidos}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="producto.qaProductosAprobados" type="number">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.qaProductosAprobados}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="producto.qaProductosRechazados" type="number">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.qaProductosRechazados}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="producto.qaObservaciones">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.qaObservaciones}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <p>No se han encontrado registros con los parámetros indicados.</p>
+    </ng-template>
+</p-table>

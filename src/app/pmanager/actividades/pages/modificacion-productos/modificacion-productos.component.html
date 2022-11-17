@@ -1,0 +1,80 @@
+<p-confirmDialog #cd [style]="{width: '50vw'}">
+    <ng-template pTemplate="footer">
+        <button type="button" pButton icon="pi pi-times" label="No" (click)="cd.reject()"></button>
+        <button type="button" pButton icon="pi pi-check" label="Si" (click)="cd.accept()"></button>
+    </ng-template>
+</p-confirmDialog>
+<p-toast></p-toast>
+<p-table [value]="productos" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
+    [rowsPerPageOptions]="[10,25,50]">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Acciones</th>
+            <th>Tipo de solicitud</th>
+            <th>Comentario solicitud</th>
+            <th>Nombre solicitante</th>
+            <th>Semana</th>
+            <th>Proyecto</th>
+            <th>Producto</th>
+            <th>Fecha estimada entrega</th>
+            <th>Horas Estimadas Producto</th>
+            <th>% Cumplimiento</th>
+            <th>Cronograma</th>
+            <th>Observaciones</th>
+            <th>Prod. Ent. a QA</th>
+            <th>Errores Rep. QA</th>
+            <th>Errores Corregidos</th>
+            <th>Prod. Apro. QA</th>
+            <th>Prod. Rech. QA</th>
+            <th>Observaciones QA</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-producto>
+        <tr>
+            <td style="text-align:center">
+                <div *ngIf="producto.estadoSolicitudModificacion === 'SOL'; else eliminar">
+                    <button (click)="aprobar(producto, 'SOL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-primary mb-2">Aprobar
+                        modificación</button>
+                    <button (click)="rechazar(producto, 'SOL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-danger">Rechazar
+                        modificación</button>
+                </div>
+                <ng-template #eliminar>
+                    <button (click)="aprobar(producto, 'SEL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-primary mb-2">Aprobar
+                        eliminación</button>
+                    <button (click)="rechazar(producto, 'SEL')" pButton pRipple type="button"
+                        class="p-button-rounded p-button-danger">Rechazar
+                        eliminación</button>
+                </ng-template>
+            </td>
+            <td class=" text-right">
+                {{producto.estadoSolicitudModificacion | i18nSelect: estadoSolicitudMap}}
+            </td>
+            <td class="text-right">{{producto.comentarioSolicitudModificacion}}</td>
+            <td class="text-right">{{producto.nombreUsuarioCompleto}}</td>
+            <td class="text-right">{{producto.semana}}</td>
+            <td class="text-right">{{producto.proyecto.nombre}}</td>
+            <td class="text-right">{{producto.nombre}}</td>
+            <td class="text-right">{{producto.fechaEstimadaEntrega}}</td>
+            <td class="text-right">{{producto.horasEstimadas}}</td>
+            <td class="text-right">{{producto.porcentajeCumplimiento}}</td>
+            <td class="text-right">{{producto.cronograma}}</td>
+            <td class="text-right">{{producto.observaciones}}</td>
+            <td class="text-right">{{producto.entregadoQa}}</td>
+            <td class="text-right">{{producto.qaErroresReportados}}</td>
+            <td class="text-right">{{producto.qaErroesCorregidos}}</td>
+            <td class="text-right">{{producto.qaProductosAprobados}}</td>
+            <td class="text-right">{{producto.qaProductosRechazados}}</td>
+            <td class="text-right">{{producto.qaObservaciones}}</td>
+
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="loadingbody">
+        <p-progressSpinner></p-progressSpinner>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <p>No se han encontrado registros con los parámetros indicados.</p>
+    </ng-template>
+</p-table>

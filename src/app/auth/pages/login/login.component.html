@@ -1,0 +1,58 @@
+<p-toast position="top-center" key="tc"></p-toast>
+<div
+  class="flex flex-wrap border-noround min-h-screen bg-blue-500 align-items-center justify-content-center align-content-center">
+  <div class="card-container overflow-hidden">
+    <div class="flex flex-wrap justify-content-center vertical-align-middle">
+      <div class="flex-initial flex align-items-center justify-content-center border-round md-12 md:col-4 mb-3">
+        <div class="bg-contain bg-no-repeat bg-center h-5rem w-screen"
+          style="background-image: url('assets/img/logo-bisolutions.svg')"></div>
+      </div>
+    </div>
+    <div class="flex flex-wrap justify-content-center vertical-align-middle">
+      <p-card class="md-12 md:col-4 mt-1" styleClass="p-card-shadow">
+        <h3 class="text-center">Iniciar Sesión</h3>
+        <form [formGroup]="formularioLogin" (ngSubmit)="login()">
+          <div class="p-fluid">
+            <div class="field">
+              <div class="col-12">
+                <p for="codUsuario">Usuario</p>
+                <span class="p-input-icon-right mb-3">
+                  <i class="pi pi-user"></i>
+                  <input pInputText id="codUsuario" formControlName="codUsuario" type="text" pInputText
+                    placeholder="Nombre de usuario" styleClass="w-full" />
+                </span>
+                <div *ngIf="campoEsValido('codUsuario')">
+                  <small id="username-help" class="p-error">
+                    Este campo es obligatorio.
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="col-12">
+                <p for="clave">Contraseña</p>
+                <div class="mb-3">
+                  <p-password id="clave" [feedback]="false" formControlName="clave" placeholder="Contraseña"
+                    [toggleMask]="true" styleClass="p-password p-component p-inputwrapper p-input-icon-right">
+                  </p-password>
+                </div>
+                <div *ngIf="campoEsValido('clave')">
+                  <small id="username-help" class="p-error">
+                    Este campo es obligatorio.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="col-12">
+                <p-button [loading]="isLoading" type="submit" sub class="min-w-max" label="Ingresar"></p-button>
+              </div>
+            </div>
+          </div>
+        </form>
+
+      </p-card>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,340 @@
+<p-confirmDialog #cd [style]="{width: '50vw'}">
+    <ng-template pTemplate="footer">
+        <h4 class="mt-3 text-left w-100">Seleccione que desea realizar con el producto.</h4>
+        <div class="flex-row mb-3 w-100 text-left">
+            <div class="field-radiobutton mt-3">
+                <p-radioButton inputId="modificar" name="modificar" value="SOL" [(ngModel)]="accion"></p-radioButton>
+                <label for="modificar">Modificar</label>
+            </div>
+            <div class="field-radiobutton">
+                <p-radioButton inputId="eliminar" name="eliminar" value="SEL" [(ngModel)]="accion"></p-radioButton>
+                <label for="eliminar">Eliminar</label>
+            </div>
+        </div>
+        <h4 class="mt-3 mb-3 text-left w-100">Ingrese un comentario del porqué de la solicitud.</h4>
+        <div class="flex-row mb-3 w-100 text-left">
+            <textarea [(ngModel)]="comentarioSolicitudModificacion" style="width: 100% !important" [rows]="3"
+                pInputTextarea [autoResize]="true"></textarea>
+        </div>
+        <div>
+            <button type="button" pButton icon="pi pi-times" label="Cancelar" (click)="cd.reject()"></button>
+            <button type="button" pButton icon="pi pi-check" label="Enviar" (click)="cd.accept()"></button>
+        </div>
+    </ng-template>
+</p-confirmDialog>
+<p-confirmDialog #cc [style]="{width: '50vw'}" key="cancelarSolicitud">
+    <ng-template pTemplate="footer">
+        <button type="button" pButton icon="pi pi-times" label="No" (click)="cc.reject()"></button>
+        <button type="button" pButton icon="pi pi-check" label="Si" (click)="cc.accept()"></button>
+    </ng-template>
+</p-confirmDialog>
+<p-toast></p-toast>
+<div class="mb-5">
+    <h1>Crear producto</h1>
+    <form (ngSubmit)="guardarProducto()" #miFormulario="ngForm" autocomplete="off">
+        <button type="submit" class="mt-3 mb-3" pButton>Guardar producto</button>
+        <p-table [value]="productoNuevo" responsiveLayout="scroll" inde>
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Semana</th>
+                    <th>Proyecto</th>
+                    <th>Producto</th>
+                    <th>Fecha estimada entrega</th>
+                    <th>Horas Estimadas Producto</th>
+                    <th>% Cumplimiento</th>
+                    <th>Cronograma</th>
+                    <th>Observaciones</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-producto>
+                <tr>
+                    <td>
+                        {{producto.semana | date:'dd-MM-yyyy' }}
+                    </td>
+                    <td pEditableColumn>
+                        <p-dropdown (onChange)="seleccionarProyecto(productoNuevo[0])" [options]="proyectos"
+                            appendTo="body" [(ngModel)]="producto.codProyecto" name="codProyecto"
+                            placeholder="Proyectos" optionLabel="nombre" optionValue="codProyecto" [required]="true">
+                        </p-dropdown>
+                    </td>
+                    <td pEditableColumn>
+                        <input name="nombre" pInputText [(ngModel)]="producto.nombre">
+                    </td>
+                    <td pEditableColumn>
+                        <p-calendar [minDate]="fechaEntregaMin" [maxDate]="fechaEntregaMax" [required]="true"
+                            name="fechaEstimadaEntrega" [showIcon]="true" appendTo="body" class="z-index"
+                            [(ngModel)]="producto.fechaEstimadaEntrega">
+                        </p-calendar>
+                    </td>
+                    <td pEditableColumn>
+                        <p-inputNumber [required]="true" name="horasEstimadas" [showButtons]="true"
+                            [(ngModel)]="producto.horasEstimadas" [min]="0" [max]="100">
+                        </p-inputNumber>
+                    </td>
+                    <td pEditableColumn>
+                        <p-inputNumber [step]="10" name="porcentajeCumplimiento" [showButtons]="true"
+                            [(ngModel)]="producto.porcentajeCumplimiento" [min]="0" [max]="100">
+                        </p-inputNumber>
+                    </td>
+                    <td pEditableColumn>
+                        <input pInputText name="cronograma" type="text" [(ngModel)]="producto.cronograma">
+                    </td>
+                    <td pEditableColumn>
+                        <input pInputText name="observaciones" type="text" [(ngModel)]="producto.observaciones">
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </form>
+</div>
+<h1>Mis productos</h1>
+<div class="flex flex-column mb-4" style="width: 1000px;">
+    <div class="flex flex-row justify-content-around mt-3">
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Proyectos</p>
+            <p-dropdown [showClear]="true" [options]="proyectos" appendTo="body" [(ngModel)]="proyectoFiltro"
+                placeholder="Proyectos" optionLabel="nombre" optionValue="codProyecto"></p-dropdown>
+        </div>
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Producto</p>
+            <input pInputText required [(ngModel)]="nombreProducto" name="nombreProducto"
+                placeholder="Nombre del producto" type="text" />
+        </div>
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Porcentaje cumplimiento</p>
+            <input pInputText required [(ngModel)]="porcentajeCumplimiento" name="porcentajeCumplimiento"
+                placeholder="Porcentaje" type="number" />
+        </div>
+    </div>
+    <div class="flex flex-row justify-content-around mt-3">
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Mes</p>
+            <p-dropdown [options]="meses" (onChange)="llenarSemanas()" appendTo="body" [(ngModel)]="mesSeleccionado"
+                placeholder="Meses" optionLabel="nombre" optionValue="numero"></p-dropdown>
+        </div>
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Semana</p>
+            <p-dropdown [options]="semanas" appendTo="body" [(ngModel)]="semanaSeleccionada" placeholder="Semanas"
+                name="semanas"></p-dropdown>
+        </div>
+    </div>
+    <div class="flex flex-row justify-content-between mt-5">
+        <button pButton pRipple label="Consultar" (click)="consultar()" class="m-auto w-2"></button>
+        <button pButton pRipple label="Consultar todo" (click)="obtenerProductos()" class="m-auto w-2"></button>
+    </div>
+</div>
+<p-table styleClass="p-datatable-sm" currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} productos"
+    [value]="productos" editMode="row" dataKey="codProducto" [paginator]="true" [rows]="10"
+    [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]"
+    styleClass="p-datatable-gridlines">
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Acciones</th>
+            <th pSortableColumn="estadoSolicitudModificacion">Solicitud modificación<p-sortIcon
+                    field="estadoSolicitudModificacion"></p-sortIcon>
+            </th>
+            <th pSortableColumn="semana">Semana<p-sortIcon field="semana"></p-sortIcon>
+            </th>
+            <th pSortableColumn="proyecto.nombre">Proyecto<p-sortIcon field="proyecto.nombre"></p-sortIcon>
+            </th>
+            <th pSortableColumn="nombre">Producto<p-sortIcon field="nombre"></p-sortIcon>
+            </th>
+            <th pSortableColumn="fechaEstimadaEntrega">Fecha estimada entrega<p-sortIcon field="fechaEstimadaEntrega">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="horasEstimadas">Horas Estimadas Producto<p-sortIcon field="horasEstimadas">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="porcentajeCumplimiento">% Cumplimiento<p-sortIcon field="porcentajeCumplimiento">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="fechaRealEntrega">Fecha real entrega<p-sortIcon field="fechaRealEntrega">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="cronograma">Cronograma<p-sortIcon field="cronograma"></p-sortIcon>
+            </th>
+            <th pSortableColumn="observaciones">Observaciones<p-sortIcon field="observaciones"></p-sortIcon>
+            </th>
+            <th pSortableColumn="entregadoQa">Prod. Ent. a QA<p-sortIcon field="entregadoQa"></p-sortIcon>
+            </th>
+            <th pSortableColumn="qaErroresReportados">Errores Rep. QA<p-sortIcon field="qaErroresReportados">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="qaErroesCorregidos">Errores Corregidos<p-sortIcon field="qaErroesCorregidos">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="qaProductosAprobados">Prod. Apro. QA<p-sortIcon field="qaProductosAprobados">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="qaProductosRechazados">Prod. Rech. QA<p-sortIcon field="qaProductosRechazados">
+                </p-sortIcon>
+            </th>
+            <th pSortableColumn="qaObservaciones">Observaciones QA<p-sortIcon field="qaObservaciones"></p-sortIcon>
+            </th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-producto let-editing="editing" let-ri="rowIndex">
+        <tr [pEditableRow]="producto" *ngIf="producto.estadoSolicitudModificacion === 'APR'; else noModificar">
+            <td style="text-align:center">
+                <button *ngIf="!editing" pButton pRipple type="button" pInitEditableRow icon="pi pi-pencil"
+                    (click)="editar(producto)" class="p-button-rounded p-button-primary"></button>
+                <button *ngIf="editing" pButton pRipple type="button" pSaveEditableRow icon="pi pi-check"
+                    (click)="guardarCambios(producto)"
+                    class="p-button-rounded p-button-text p-button-success mr-2"></button>
+                <button *ngIf="editing" pButton pRipple type="button" pCancelEditableRow icon="pi pi-times"
+                    (click)="cancelarCambios(producto, ri)"
+                    class="p-button-rounded p-button-text p-button-danger"></button>
+            </td>
+            <td class="text-right">
+                {{producto.estadoSolicitudModificacion | i18nSelect: estadoSolicitudMap}}
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-dropdown [options]="semanasModificar" appendTo="body" [(ngModel)]="producto.semana"
+                            placeholder="Semanas" name="semanas"></p-dropdown>
+                        <!-- <input pInputText type="text" [(ngModel)]="producto.semana"> -->
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.semana | date:'dd-MM-yyyy' }}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-dropdown (onChange)="seleccionarProyecto(producto)" [options]="proyectos" appendTo="body"
+                            [(ngModel)]="producto.codProyecto" placeholder="Proyectos" optionLabel="nombre"
+                            optionValue="codProyecto"></p-dropdown>
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.proyecto.nombre}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText type="text" [(ngModel)]="producto.nombre">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.nombre}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-calendar appendTo="body" [(ngModel)]="producto.fechaEstimadaEntrega"
+                            name="fechaEstimada_{{producto.codProducto}}" [showIcon]="true" [showButtonBar]="true">
+                        </p-calendar>
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.fechaEstimadaEntrega | date:'dd-MM-yyyy' }}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-inputNumber name="horasEstimadas" [showButtons]="true" [(ngModel)]="producto.horasEstimadas"
+                            [min]="0" [max]="100">
+                        </p-inputNumber>
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.horasEstimadas}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right" pEditableColumn>
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-inputNumber [step]="10" name="porcentajeCumplimiento" [showButtons]="true"
+                            [(ngModel)]="producto.porcentajeCumplimiento" [min]="0" [max]="100">
+                        </p-inputNumber>
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.porcentajeCumplimiento}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right" pEditableColumn>
+                {{producto.fechaRealEntrega | date:'dd-MM-yyyy'}}
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText type="text" [(ngModel)]="producto.cronograma">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.cronograma}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText type="text" [(ngModel)]="producto.observaciones">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{producto.observaciones}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">{{producto.entregadoQa}}</td>
+            <td class="text-right">{{producto.qaErroresReportados}}</td>
+            <td class="text-right">{{producto.qaErroesCorregidos}}</td>
+            <td class="text-right">{{producto.qaProductosAprobados}}</td>
+            <td class="text-right">{{producto.qaProductosRechazados}}</td>
+            <td class="text-right">{{producto.qaObservaciones}}</td>
+        </tr>
+        <ng-template #noModificar>
+            <tr>
+                <td style="text-align:center">
+                    <button *ngIf="solicitarCambio(producto)" pButton pRipple type="button"
+                        (click)="solicitarEstado(producto)"
+                        class="p-button-rounded p-button-text mb-2">Modificar</button>
+                    <button
+                        *ngIf="producto.estadoSolicitudModificacion === 'SOL' || producto.estadoSolicitudModificacion === 'SEL'"
+                        pButton pRipple type="button" (click)="cancelarSolicitud(producto)"
+                        class="p-button-rounded p-button-warn">Cancelar
+                        solicitud</button>
+                    <button *ngIf="producto.estadoSolicitudModificacion === 'APE'" pButton icon="pi pi-trash" pRipple
+                        type="button" (click)="eliminar(producto)" class="p-button-rounded p-button-danger"></button>
+                </td>
+                <td class="text-right">
+                    {{producto.estadoSolicitudModificacion | i18nSelect: estadoSolicitudMap}}
+                </td>
+                <td class="text-right">{{producto.semana | date:'dd-MM-yyyy' }}</td>
+                <td class="text-right">{{producto.proyecto.nombre}}</td>
+                <td class="text-right">{{producto.nombre}}</td>
+                <td class="text-right">{{producto.fechaEstimadaEntrega | date:'dd-MM-yyyy' }}</td>
+                <td class="text-right">{{producto.horasEstimadas}}</td>
+                <td class="text-right">
+                    <p-inputNumber [step]="10" (onFocus)="capturarAnterior(producto)"
+                        (onBlur)="verificarCumplimiento(producto,ri)" [showButtons]="true"
+                        [(ngModel)]="producto.porcentajeCumplimiento" [min]="0" [max]="100">
+                    </p-inputNumber>
+                </td>
+                <td class="text-right">{{producto.fechaRealEntrega | date:'dd-MM-yyyy' }}</td>
+                <td class="text-right">{{producto.cronograma}}</td>
+                <td class="text-right">{{producto.observaciones}}</td>
+                <td class="text-right">{{producto.entregadoQa}}</td>
+                <td class="text-right">{{producto.qaErroresReportados}}</td>
+                <td class="text-right">{{producto.qaErroesCorregidos}}</td>
+                <td class="text-right">{{producto.qaProductosAprobados}}</td>
+                <td class="text-right">{{producto.qaProductosRechazados}}</td>
+                <td class="text-right">{{producto.qaObservaciones}}</td>
+
+            </tr>
+        </ng-template>
+
+    </ng-template>
+    <ng-template pTemplate="loadingbody">
+        <p-progressSpinner></p-progressSpinner>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <p>No se han encontrado registros con los parámetros indicados.</p>
+    </ng-template>
+</p-table>
