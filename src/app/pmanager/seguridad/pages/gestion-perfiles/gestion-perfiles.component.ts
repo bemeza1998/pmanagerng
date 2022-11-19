@@ -1,12 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { Estado } from 'src/app/pmanager/interfaces/estado.interface';
 import { Perfil } from '../../../interfaces/perfil.interface';
 import { PmanagerService } from '../../../services/pmanager.service';
-
-interface Estado {
-  sigla: string,
-  nombre: string
-}
 
 @Component({
   selector: 'app-gestion-perfiles',

@@ -5,5 +5,7 @@ export interface Usuario {
     nombre: string,
     apellido: string,
     mail: string,
-    estado: string
+    estado: string,
+    nombreJefatura?: string,
+    nombrePerfil?: string
 }

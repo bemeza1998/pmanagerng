@@ -28,7 +28,7 @@ interface Mes {
 })
 export class GestionProductosComponent implements OnInit {
 
-  @ViewChild('miFormulario') miFormulario!: NgForm;
+  @ViewChild('crearFormulario') crearFormulario!: NgForm;
 
   usuario = this.autenticacionService.getUserDataFromLocalStorage();
 
@@ -37,8 +37,8 @@ export class GestionProductosComponent implements OnInit {
     codJefatura: 1,
     codProyecto: 0,
     nombre: '',
-    mes: 0,
     semana: this.obtenerSemana('siguiente').toISOString(),
+    mes: this.obtenerSemana('siguiente').getMonth() + 1,
     fechaEstimadaEntrega: '',
     horasEstimadas: 0,
     porcentajeCumplimiento: 0,
@@ -99,9 +99,10 @@ export class GestionProductosComponent implements OnInit {
   guardarProducto() {
     this.pmanagerService.crearProducto(this.productoNuevo[0])
       .subscribe(() => {
-        this.miFormulario.reset();
+        this.crearFormulario.reset();
         this.obtenerProductos();
       });
+
   }
 
   obtenerProyectos() {

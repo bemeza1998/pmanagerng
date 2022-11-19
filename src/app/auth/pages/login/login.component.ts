@@ -38,20 +38,13 @@ export class LoginComponent implements OnInit {
     }
     const { codUsuario, clave } = this.formularioLogin.value;
     this.autenticacionService.login({ codUsuario, clave })
-      .subscribe({
-        next: (usuario) => {
-          console.log(usuario);
-          // this.authService.setToken(user.token);
+      .subscribe((resp) => {
+        if (resp) {
           this.router.navigateByUrl('');
-          // this.isLoading = false;
-        },
-        error: (err) => {
+        } else {
           this.showErrorMessage();
-          // console.error('Error en el API: ' + err.message);
-          // this.isLoading = false;
         }
-      })
-    this.formularioLogin.reset();
+      });
   }
 
   private showErrorMessage() {

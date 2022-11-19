@@ -11,7 +11,7 @@ import { GestionProductosComponent } from './pmanager/actividades/pages/gestion-
 import { ModificacionProductosComponent } from './pmanager/actividades/pages/modificacion-productos/modificacion-productos.component';
 import { CalidadProductosComponent } from './pmanager/actividades/pages/calidad-productos/calidad-productos.component';
 import { ModificacionProyectosComponent } from './pmanager/actividades/pages/modificacion-proyectos/modificacion-proyectos.component';
-import { GestionPerfilesComponent } from './pmanager/actividades/pages/gestion-perfiles/gestion-perfiles.component';
+import { GestionPerfilesComponent } from './pmanager/seguridad/pages/gestion-perfiles/gestion-perfiles.component';
 
 
 const routes: Routes = [

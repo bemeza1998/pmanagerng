@@ -4,13 +4,15 @@ import { GestionUsuariosComponent } from './pages/gestion-usuarios/gestion-usuar
 import { PrimeNgModule } from '../../prime-ng/prime-ng.module';
 import { GestionJefaturasComponent } from './pages/gestion-jefaturas/gestion-jefaturas.component';
 import { FormsModule } from '@angular/forms';
+import { GestionPerfilesComponent } from './pages/gestion-perfiles/gestion-perfiles.component';
 
 
 
 @NgModule({
   declarations: [
     GestionUsuariosComponent,
-    GestionJefaturasComponent
+    GestionJefaturasComponent,
+    GestionPerfilesComponent
   ],
   imports: [
     CommonModule,

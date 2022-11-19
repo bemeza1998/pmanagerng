@@ -6,6 +6,7 @@ import { Usuario } from '../interfaces/usuario.interface';
 import { Proyecto } from '../interfaces/proyecto.interface';
 import { Producto } from '../interfaces/producto.interface';
 import { Perfil } from '../interfaces/perfil.interface';
+import { Jefatura } from '../interfaces/jefatura.interface';
 
 const URL: string = environment.baseUrl;
 
@@ -22,6 +23,14 @@ export class PmanagerService {
 
   crearUsuario(usuario: Usuario): Observable<Usuario> {
     return this.http.post<Usuario>(`${URL}/usuario`, usuario);
+  }
+
+  modificarUsuario(usuario: Usuario): Observable<Usuario> {
+    return this.http.put<Usuario>(`${URL}/usuario`, usuario);
+  }
+
+  modificarEstadoUsuario(usuario: Usuario): Observable<Usuario> {
+    return this.http.patch<Usuario>(`${URL}/usuario/estado`, usuario);
   }
 
   obtenerPorJefatura(codJefatura: number): Observable<Proyecto[]> {
@@ -106,12 +115,27 @@ export class PmanagerService {
   }
 
   modificarPerfil(perfil: Perfil): Observable<Perfil> {
-    console.log(perfil);
     return this.http.put<Perfil>(`${URL}/perfil`, perfil);
   }
 
   eliminarPerfil(perfil: Perfil): Observable<any> {
     return this.http.patch<any>(`${URL}/perfil`, perfil);
+  }
+
+  crearJefatura(jefatura: Jefatura): Observable<Jefatura> {
+    return this.http.post<Jefatura>(`${URL}/jefatura`, jefatura);
+  }
+
+  obtenerJefaturas(): Observable<Jefatura[]> {
+    return this.http.get<Jefatura[]>(`${URL}/jefatura`);
+  }
+
+  modificarJefatura(jefatura: Jefatura): Observable<Jefatura> {
+    return this.http.put<Jefatura>(`${URL}/jefatura`, jefatura);
+  }
+
+  eliminarJefatura(jefatura: Jefatura): Observable<any> {
+    return this.http.delete<any>(`${URL}/jefatura/eliminar/${jefatura.codJefatura}`);
   }
 
 }

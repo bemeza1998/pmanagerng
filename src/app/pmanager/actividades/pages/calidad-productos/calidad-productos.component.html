@@ -1,11 +1,11 @@
 <p-toast></p-toast>
-<h1>Caidad productos</h1>
+<h1>Calidad productos</h1>
 <div class="flex flex-column mb-4" style="width: 1000px;">
     <div class="flex flex-row justify-content-around mt-3">
         <div class="flex flex-row">
             <p class="pt-3 mr-5">Proyectos</p>
-            <p-dropdown [options]="proyectos" appendTo="body" [(ngModel)]="proyectoSeleccionado" placeholder="Proyectos"
-                optionLabel="nombre" optionValue="codProyecto"></p-dropdown>
+            <p-dropdown [showClear]="true" [options]="proyectos" appendTo="body" [(ngModel)]="proyectoSeleccionado"
+                placeholder="Proyectos" optionLabel="nombre" optionValue="codProyecto"></p-dropdown>
         </div>
         <div class="flex flex-row m-auto">
             <p class="pt-3 mr-5">Nombre creador</p>
@@ -21,13 +21,14 @@
         </div>
         <div class="flex flex-row">
             <p class="pt-3 mr-5">Mes</p>
-            <p-dropdown [options]="meses" (onChange)="llenarSemanas()" appendTo="body" [(ngModel)]="mesSeleccionado"
-                placeholder="Meses" optionLabel="nombre" optionValue="numero"></p-dropdown>
+            <p-dropdown [showClear]="true" [options]="meses" (onChange)="llenarSemanas()" appendTo="body"
+                [(ngModel)]="mesSeleccionado" placeholder="Meses" optionLabel="nombre" optionValue="numero">
+            </p-dropdown>
         </div>
         <div class="flex flex-row">
             <p class="pt-3 mr-5">Semana</p>
-            <p-dropdown [options]="semanas" appendTo="body" [(ngModel)]="semanaSeleccionada" placeholder="Semanas"
-                name="semanas"></p-dropdown>
+            <p-dropdown [showClear]="true" [options]="semanas" appendTo="body" [(ngModel)]="semanaSeleccionada"
+                placeholder="Semanas" name="semanas"></p-dropdown>
         </div>
     </div>
     <div class="flex flex-row justify-content-between mt-5">
@@ -39,7 +40,6 @@
     [rowsPerPageOptions]="[10,25,50]" dataKey="codProducto" editMode="row">
     <ng-template pTemplate="header">
         <tr>
-            <th>Acciones</th>
             <th>Semana</th>
             <th>Creador</th>
             <th>Proyecto</th>
@@ -55,20 +55,11 @@
             <th>Prod. Apro. QA</th>
             <th>Prod. Rech. QA</th>
             <th>Observaciones QA</th>
+            <th>Acciones</th>
         </tr>
     </ng-template>
     <ng-template pTemplate="body" let-producto let-editing="editing" let-ri="rowIndex">
         <tr [pEditableRow]="producto">
-            <td style="text-align:center">
-                <button *ngIf="!editing" pButton pRipple type="button" pInitEditableRow icon="pi pi-pencil"
-                    (click)="editar(producto)" class="p-button-rounded p-button-text"></button>
-                <button *ngIf="editing" pButton pRipple type="button" pSaveEditableRow icon="pi pi-check"
-                    (click)="guardarCambios(producto)"
-                    class="p-button-rounded p-button-text p-button-success mr-2"></button>
-                <button *ngIf="editing" pButton pRipple type="button" pCancelEditableRow icon="pi pi-times"
-                    (click)="cancelarCambios(producto, ri)"
-                    class="p-button-rounded p-button-text p-button-danger"></button>
-            </td>
             <td class="text-right">{{producto.semana | date:'dd-MM-yyyy' }}</td>
             <td class="text-right">{{producto.nombreUsuarioCompleto}}</td>
             <td class="text-right">{{producto.proyecto.nombre}}</td>
@@ -137,6 +128,16 @@
                         {{producto.qaObservaciones}}
                     </ng-template>
                 </p-cellEditor>
+            </td>
+            <td style="text-align:center">
+                <button *ngIf="!editing" pButton pRipple type="button" pInitEditableRow icon="pi pi-pencil"
+                    (click)="editar(producto)" class="p-button-rounded p-button-text"></button>
+                <button *ngIf="editing" pButton pRipple type="button" pSaveEditableRow icon="pi pi-check"
+                    (click)="guardarCambios(producto)"
+                    class="p-button-rounded p-button-text p-button-success mr-2"></button>
+                <button *ngIf="editing" pButton pRipple type="button" pCancelEditableRow icon="pi pi-times"
+                    (click)="cancelarCambios(producto, ri)"
+                    class="p-button-rounded p-button-text p-button-danger"></button>
             </td>
         </tr>
     </ng-template>

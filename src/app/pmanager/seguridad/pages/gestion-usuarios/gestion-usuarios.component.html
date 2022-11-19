@@ -1,11 +1,12 @@
+<p-toast></p-toast>
+<h1 class="mb-4">Usuarios</h1>
 <button pButton pRipple label="Crear usuario" class="min-w-min mx-3 w-3" (click)="showLoadDialog()"></button>
 <p-table [value]="usuarios" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
-    [rowsPerPageOptions]="[10,25,50]">
-
+    [rowsPerPageOptions]="[10,25,50]" dataKey="codUsuario" editMode="row">
     <ng-template pTemplate="header">
         <tr>
             <th>#</th>
-            <th>Código usuario</th>
+            <th>Nombre usuario</th>
             <th>Jefatura</th>
             <th>Perfil</th>
             <th>Nombre</th>
@@ -15,18 +16,90 @@
             <th>Acciones</th>
         </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-i="rowIndex" let-usuario>
-        <tr>
-            <td>{{i + 1}}</td>
+    <ng-template pTemplate="body" let-usuario let-editing="editing" let-ri="rowIndex">
+        <tr [pEditableRow]="usuario">
+            <td>{{ri + 1}}</td>
             <td>{{usuario.codUsuario}}</td>
-            <td>{{usuario.codJefatura}}</td>
-            <td>{{usuario.codPerfil}}</td>
-            <td>{{usuario.nombre | titlecase}}</td>
-            <td>{{usuario.apellido | titlecase}}</td>
-            <td>{{usuario.mail}}</td>
-            <td>{{usuario.estado}}</td>
-            <td class=""><i class="pi pi-file-edit mr-3"></i> <i class="pi pi-trash"></i></td>
-
+            <td>
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <!-- <p-dropdown [options]="jefaturas" [(ngModel)]="usuario.codJefatura" placeholder="Jefaturas"
+                                 name="codJefatura"></p-dropdown> -->
+                        <input pInputText [(ngModel)]="usuario.nombreJefatura" type="text">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{usuario.nombreJefatura | titlecase}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td>
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-dropdown [options]="perfiles" [(ngModel)]="usuario.codPerfil" placeholder="Perfiles"
+                            optionValue="codPerfil" optionLabel="nombre"></p-dropdown>
+                        <!-- <input pInputText [(ngModel)]="usuario.nombrePerfil" type="text"> -->
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{usuario.nombrePerfil}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td>
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="usuario.nombre" type="text">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{usuario.nombre | titlecase}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td>
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="usuario.apellido" type="text">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{usuario.apellido | titlecase}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td>
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText [(ngModel)]="usuario.mail" type="text">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{usuario.mail}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td>
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-dropdown [options]="estados" [(ngModel)]="usuario.estado" placeholder="Estados"
+                            optionValue="sigla" optionLabel="nombre"></p-dropdown>
+                        <!-- <input pInputText [(ngModel)]="usuario.estado" type="text"> -->
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{usuario.estado}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td style="text-align:center">
+                <div class="flex">
+                    <button (click)="editar(usuario)" *ngIf="!editing" pButton pRipple type="button" pInitEditableRow
+                        icon="pi pi-pencil" class="p-button-rounded p-button-text"></button>
+                    <button (click)="eliminar(usuario)" *ngIf="!editing && usuario.estado !== 'INA'" pButton pRipple
+                        type="button" icon="pi pi-trash" class="p-button-rounded p-button-text"></button>
+                    <button (click)="guardarCambios(usuario)" *ngIf="editing" pButton pRipple type="button"
+                        pSaveEditableRow icon="pi pi-check"
+                        class="p-button-rounded p-button-text p-button-success mr-2"></button>
+                    <button (click)="cancelarCambios(usuario,ri)" *ngIf="editing" pButton pRipple type="button"
+                        pCancelEditableRow icon="pi pi-times"
+                        class="p-button-rounded p-button-text p-button-danger"></button>
+                </div>
+            </td>
         </tr>
     </ng-template>
     <ng-template pTemplate="loadingbody">
@@ -37,18 +110,18 @@
     </ng-template>
 </p-table>
 
-<p-dialog header="Carga de ordenes - Por teclado" [(visible)]="displayLoad" [breakpoints]="{'960px': '75vw'}"
-    [style]="{width: '50vw'}" [draggable]="true" [resizable]="false">
+<p-dialog header="Crear un nuevo usuario" [(visible)]="displayLoad" [breakpoints]="{'960px': '75vw'}"
+    [style]="{width: '55vw'}" [draggable]="true" [resizable]="false">
     <form novalidate>
         <div class="p-fluid">
             <div class="field mt-2 px-4">
                 <div class="flex flex-column">
                     <div class="grid p-fluid mt-2">
                         <div class="field col-6 md:col-2">
-                            <p style="text-align:right;" class="pt-3 mr-2">Código de usuario: </p>
+                            <p style="text-align:right;" class="pt-3 mr-2">Nombre de usuario: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="text" pInputText placeholder="Código usuario" required [(ngModel)]="codUsuario"
+                            <input type="text" pInputText placeholder="Nombre usuario" required [(ngModel)]="codUsuario"
                                 name="codUsuario">
                         </div>
                         <div class="field col-6 md:col-2">
@@ -62,8 +135,8 @@
                             <p style="text-align:right;" class="pt-3 mr-2">Perfil: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <p-dropdown [options]="perfiles" [(ngModel)]="codPerfil" placeholder="Perfiles"
-                                name="codPerfil"></p-dropdown>
+                            <p-dropdown [options]="perfiles" [(ngModel)]="codPerfil" optionValue="codPerfil"
+                                optionLabel="nombre" placeholder="Perfiles" name="codPerfil"></p-dropdown>
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Nombre: </p>
