@@ -19,8 +19,6 @@ import { GestionPerfilesComponent } from './pages/gestion-perfiles/gestion-perfi
     FormsModule,
     PrimeNgModule
   ],
-  exports: [
-    GestionUsuariosComponent
-  ]
+  exports: []
 })
 export class SeguridadModule { }

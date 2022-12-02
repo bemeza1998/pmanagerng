@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Proyecto } from 'src/app/pmanager/interfaces/proyecto.interface';
 import { PmanagerService } from 'src/app/pmanager/services/pmanager.service';
 import { AutenticacionService } from '../../../services/autenticacion.service';
+import { Empresa } from '../../../interfaces/empresa.interface';
+import { NgForm } from '@angular/forms';
 
 @Component({
   selector: 'app-gestion-proyectos',
@@ -13,10 +15,13 @@ import { AutenticacionService } from '../../../services/autenticacion.service';
 })
 export class GestionProyectosComponent implements OnInit {
 
+  @ViewChild('crearProyecto') crearFormulario!: NgForm;
+
+
   displayLoad: boolean = false;
   proyectos: Proyecto[] = [];
 
-  usuario = this.autenticacionService.getUserDataFromLocalStorage();
+  usuario = this.autenticacionService.usuarioAutenticado;
 
   codProyecto: number = 0;
   identificadorProyecto: string = '';
@@ -31,8 +36,10 @@ export class GestionProyectosComponent implements OnInit {
   valorHora: number = 0;
   fechaInicio: Date = new Date();
   fechaFinalizacion: Date = new Date();
-  nombreEmpresa: string = '';
   accion: string = 'SOL';
+  empresas: Empresa[] = [];
+  codEmpresa: number = 0;
+  loading: boolean = false;
 
   comentarioSolicitudModificacion: string = '';
 
@@ -64,12 +71,21 @@ export class GestionProyectosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarProyectos();
+    this.cargarEmpresas();
+  }
+
+  cargarEmpresas() {
+    this.pmanagerService.obtenerEmpresas('S')
+      .subscribe((empresas) => {
+        this.empresas = empresas;
+      });
   }
 
   cargarProyectos() {
     this.pmanagerService.obtenerPorJefatura(1)
       .subscribe((proyectos) => {
         this.proyectos = proyectos;
+        this.loading = false;
       })
   }
 
@@ -78,6 +94,7 @@ export class GestionProyectosComponent implements OnInit {
   }
 
   keyboardSubmit(): void {
+    this.displayLoad = false;
     const proyecto: Proyecto = {
       codProyecto: this.codProyecto,
       identificadorProyecto: this.identificadorProyecto,
@@ -94,12 +111,25 @@ export class GestionProyectosComponent implements OnInit {
       fechaFinalizacion: this.fechaFinalizacion.toISOString(),
       estadoSolicitudModificacion: 'NOS',
       nombreUsuarioCompleto: `${this.usuario?.nombre} ${this.usuario?.apellido}`,
-      nombreEmpresa: this.nombreEmpresa
+      codEmpresa: this.codEmpresa
     };
     this.pmanagerService.crearProyecto(proyecto)
-      .subscribe((resp) => {
-        this.cargarProyectos();
-      });
+      .subscribe({
+        next: (proy) => {
+          this.proyectos.unshift(proy);
+          this.messageService.add({ severity: 'info', summary: 'Proyecto creado', detail: 'El proyecto se creó exitosamente.' });
+        },
+        error: (err) => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error.message });
+        }
+      })
+    /*.subscribe((proy) => {
+      this.proyectos.unshift(proy);
+    });*/
+  }
+
+  cargarTabla() {
+    this.loading = true;
   }
 
   calcularValorDia() {

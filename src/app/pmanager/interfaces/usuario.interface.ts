@@ -1,11 +1,13 @@
 export interface Usuario {
     codUsuario: string,
-    codJefatura: number,
+    codJefatura?: number,
     codPerfil: string,
     nombre: string,
     apellido: string,
     mail: string,
-    estado: string,
+    estado?: string,
     nombreJefatura?: string,
-    nombrePerfil?: string
+    nombrePerfil?: string,
+    nombreCompleto?: string,
+    token?: string
 }

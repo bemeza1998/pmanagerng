@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { Perfiles } from 'src/app/types/perfiles';
+import { PerfilesRev } from 'src/app/types/perfiles';
 import { MainComponent } from '../main/main.component';
 import { AutenticacionService } from '../../pmanager/services/autenticacion.service';
 
@@ -9,13 +9,13 @@ import { AutenticacionService } from '../../pmanager/services/autenticacion.serv
 @Component({
     selector: 'app-menu',
     template: `
-    <p-slideMenu [model]="model"></p-slideMenu>
+        <p-menubar [model]="model"></p-menubar>
 `
 })
 export class MenuComponent implements OnInit {
 
     public model: MenuItem[] = [];
-    private perfilPermisos: Map<Perfiles, MenuItem[]>;
+    private perfilPermisos: Map<PerfilesRev, MenuItem[]>;
     private adminItems: MenuItem[];
     private jefeItems: MenuItem[];
     private analistaItems: MenuItem[];
@@ -82,6 +82,11 @@ export class MenuComponent implements OnInit {
                 routerLink: ['/proyectos']
             },
             {
+                label: 'Gestión de empresas',
+                icon: 'pi pi-fw pi-sliders-v',
+                routerLink: ['/empresas']
+            },
+            {
                 label: 'Solicitudes modificación productos',
                 icon: 'pi pi-fw pi-sliders-v',
                 routerLink: ['/modificacion-productos']
@@ -106,23 +111,24 @@ export class MenuComponent implements OnInit {
             }
         ];
 
-        this.perfilPermisos = new Map<Perfiles, MenuItem[]>();
+        this.perfilPermisos = new Map<PerfilesRev, MenuItem[]>();
 
-        this.perfilPermisos.set(Perfiles.ADMINISTRADOR, this.adminItems);
+        this.perfilPermisos.set(PerfilesRev.ADM, this.adminItems);
 
-        this.perfilPermisos.set(Perfiles.CALIDAD, this.calidadItems);
+        this.perfilPermisos.set(PerfilesRev.CAL, this.calidadItems);
 
-        this.perfilPermisos.set(Perfiles.ANALISTA, this.analistaItems);
+        this.perfilPermisos.set(PerfilesRev.ALP, this.analistaItems);
 
-        this.perfilPermisos.set(Perfiles.RECURSO, this.recursoItems);
+        this.perfilPermisos.set(PerfilesRev.REC, this.recursoItems);
 
-        this.perfilPermisos.set(Perfiles.JEFE_DEPARTAMENTO, this.jefeItems);
+        this.perfilPermisos.set(PerfilesRev.JEF, this.jefeItems);
 
     }
 
     ngOnInit(): void {
-        const usuario = this.autenticacionService.getUserDataFromLocalStorage();
-        this.model = this.perfilPermisos.get(usuario?.codPerfil!)!;
+        const userRoles = PerfilesRev;
+        const perfil = this.autenticacionService.usuarioAutenticado?.codPerfil! as keyof typeof userRoles
+        this.model = this.perfilPermisos.get(userRoles[perfil])!;
     }
 
     onKeydown(event: KeyboardEvent) {

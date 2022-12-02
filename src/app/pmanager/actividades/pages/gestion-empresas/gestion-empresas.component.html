@@ -1,0 +1,148 @@
+<h1>Gestión de empresas</h1>
+<p-toast></p-toast>
+<button pButton pRipple label="Crear empresa" class="min-w-min mx-3 w-3" (click)="showLoadDialog()"></button>
+<p-table editMode="row" dataKey="codEmpresa" [value]="empresas" [paginator]="true" [rows]="10"
+    [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>#</th>
+            <th>Nombre empresa</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Mail</th>
+            <th>Cliente activo</th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-empresa let-editing="editing" let-ri="rowIndex">
+        <tr [pEditableRow]="empresa">
+            <td class="text-right">{{ri + 1}}</td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText type="text" [(ngModel)]="empresa.nombreEmpresa">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{empresa.nombreEmpresa}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText type="text" [(ngModel)]="empresa.direccion">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{empresa.direccion}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText type="text" [(ngModel)]="empresa.telefono">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{empresa.telefono}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <input pInputText type="text" [(ngModel)]="empresa.mail">
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{empresa.mail}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td class="text-right">
+                <p-cellEditor>
+                    <ng-template pTemplate="input">
+                        <p-dropdown [options]="estadoClienteActivo" appendTo="body" [(ngModel)]="empresa.clienteActivo"
+                            optionLabel="texto" optionValue="valor" name="estadoClienteActivoE"></p-dropdown>
+                    </ng-template>
+                    <ng-template pTemplate="output">
+                        {{empresa.clienteActivo | i18nSelect: estadoClienteMap}}
+                    </ng-template>
+                </p-cellEditor>
+            </td>
+            <td style="text-align:center">
+                <div class="flex">
+                    <button (click)="editar(empresa)" *ngIf="!editing" pButton pRipple type="button" pInitEditableRow
+                        icon="pi pi-pencil" class="p-button-rounded p-button-text"></button>
+                    <button (click)="eliminar(empresa)" *ngIf="empresa.clienteActivo !== 'N' && !editing" pButton
+                        pRipple type="button" icon="pi pi-trash" class="p-button-rounded p-button-text"></button>
+                    <button (click)="guardarCambios(empresa)" *ngIf="editing" pButton pRipple type="button"
+                        pSaveEditableRow icon="pi pi-check"
+                        class="p-button-rounded p-button-text p-button-success mr-2"></button>
+                    <button (click)="cancelarCambios(empresa,ri)" *ngIf="editing" pButton pRipple type="button"
+                        pCancelEditableRow icon="pi pi-times"
+                        class="p-button-rounded p-button-text p-button-danger"></button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="loadingbody">
+        <p-progressSpinner></p-progressSpinner>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <p>No se han encontrado registros con los parámetros indicados.</p>
+    </ng-template>
+</p-table>
+
+<p-dialog header="Crear nueva empresa" [(visible)]="displayLoad" [breakpoints]="{'960px': '75vw'}"
+    [style]="{width: '60vw'}" [draggable]="true" [resizable]="false">
+    <form novalidate>
+        <div class="p-fluid">
+            <div class="field mt-2 px-4">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Nombre: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="text" pInputText placeholder="Nombre empresa" required
+                                [(ngModel)]="nombreEmpresa" name="nombreEmpresa">
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Dirección: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="text" pInputText placeholder="Dirección" required
+                                [(ngModel)]="direccionEmpresa" name="direccion">
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Teléfono: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="text" pInputText placeholder="Teléfono" required [(ngModel)]="telefonoEmpresa"
+                                name="telefonoEmpresa">
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Mail: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <input type="mail" pInputText required [(ngModel)]="mailEmpresa" placeholder="Mail"
+                                name="mailEmpresa">
+                        </div>
+                        <div class="field col-6 md:col-2">
+                            <p style="text-align:right;" class="pt-3 mr-2">Cliente activo: </p>
+                        </div>
+                        <div class="field col-6 md:col-4">
+                            <p-dropdown [options]="estadoClienteActivo" appendTo="body" [(ngModel)]="clienteActivo"
+                                placeholder="Estado cliente" optionLabel="texto" optionValue="valor"
+                                name="estadoClienteActivo"></p-dropdown>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-content-end">
+            <p-button (click)="displayLoad=false" label="Crear" styleClass="p-buttont" (onClick)="crearEmpresa()">
+            </p-button>
+            <p-button (click)="displayLoad=false" label="Cancelar" styleClass="p-button-text"></p-button>
+        </div>
+    </form>
+</p-dialog>

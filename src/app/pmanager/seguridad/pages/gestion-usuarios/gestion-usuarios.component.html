@@ -1,8 +1,9 @@
 <p-toast></p-toast>
 <h1 class="mb-4">Usuarios</h1>
 <button pButton pRipple label="Crear usuario" class="min-w-min mx-3 w-3" (click)="showLoadDialog()"></button>
-<p-table [value]="usuarios" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
-    [rowsPerPageOptions]="[10,25,50]" dataKey="codUsuario" editMode="row">
+<p-table [loading]="loading" [lazy]="true" (onLazyLoad)="cargarTabla()" [value]="usuarios" [paginator]="true"
+    [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]"
+    dataKey="codUsuario" editMode="row">
     <ng-template pTemplate="header">
         <tr>
             <th>#</th>
@@ -23,8 +24,6 @@
             <td>
                 <p-cellEditor>
                     <ng-template pTemplate="input">
-                        <!-- <p-dropdown [options]="jefaturas" [(ngModel)]="usuario.codJefatura" placeholder="Jefaturas"
-                                 name="codJefatura"></p-dropdown> -->
                         <input pInputText [(ngModel)]="usuario.nombreJefatura" type="text">
                     </ng-template>
                     <ng-template pTemplate="output">
@@ -37,7 +36,6 @@
                     <ng-template pTemplate="input">
                         <p-dropdown [options]="perfiles" [(ngModel)]="usuario.codPerfil" placeholder="Perfiles"
                             optionValue="codPerfil" optionLabel="nombre"></p-dropdown>
-                        <!-- <input pInputText [(ngModel)]="usuario.nombrePerfil" type="text"> -->
                     </ng-template>
                     <ng-template pTemplate="output">
                         {{usuario.nombrePerfil}}
@@ -79,10 +77,9 @@
                     <ng-template pTemplate="input">
                         <p-dropdown [options]="estados" [(ngModel)]="usuario.estado" placeholder="Estados"
                             optionValue="sigla" optionLabel="nombre"></p-dropdown>
-                        <!-- <input pInputText [(ngModel)]="usuario.estado" type="text"> -->
                     </ng-template>
                     <ng-template pTemplate="output">
-                        {{usuario.estado}}
+                        {{usuario.estado | i18nSelect: estadosMap}}
                     </ng-template>
                 </p-cellEditor>
             </td>
@@ -101,9 +98,6 @@
                 </div>
             </td>
         </tr>
-    </ng-template>
-    <ng-template pTemplate="loadingbody">
-        <p-progressSpinner></p-progressSpinner>
     </ng-template>
     <ng-template pTemplate="emptymessage">
         <p>No se han encontrado registros con los parámetros indicados.</p>
@@ -129,7 +123,7 @@
                         </div>
                         <div class="field col-6 md:col-4">
                             <p-dropdown [options]="jefaturas" [(ngModel)]="codJefatura" placeholder="Jefaturas"
-                                name="codJefatura"></p-dropdown>
+                                name="codJefatura" optionValue="codJefatura" optionLabel="nombre"></p-dropdown>
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Perfil: </p>

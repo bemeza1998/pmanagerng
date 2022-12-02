@@ -17,5 +17,6 @@ export interface Proyecto {
     fechaSolicitudModificacion?: string,
     comentarioSolicitudModificacion?: string,
     nombreUsuarioCompleto?: string,
+    codEmpresa?: number,
     nombreEmpresa?: string
 }

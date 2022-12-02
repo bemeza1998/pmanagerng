@@ -5,6 +5,7 @@ import { Proyecto } from '../../../interfaces/proyecto.interface';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { NgForm } from '@angular/forms';
 import { AutenticacionService } from 'src/app/pmanager/services/autenticacion.service';
+import { ErrorQA } from 'src/app/pmanager/interfaces/errorQa.inteface';
 
 interface Mes {
   numero: number,
@@ -16,12 +17,7 @@ interface Mes {
   templateUrl: './gestion-productos.component.html',
   styles: [`
   .p-inputtext {
-      *padding-top: 0 !important;
-      *padding-bottom: 0 !important;
       width: 150px !important;
-  }
-  .z-index{
-    z-index: 1000 !important;
   }
 `],
   providers: [ConfirmationService, MessageService]
@@ -30,7 +26,7 @@ export class GestionProductosComponent implements OnInit {
 
   @ViewChild('crearFormulario') crearFormulario!: NgForm;
 
-  usuario = this.autenticacionService.getUserDataFromLocalStorage();
+  usuario = this.autenticacionService.usuarioAutenticado;
 
   productoNuevo: Producto[] = [{
     codUsuario: this.usuario?.codUsuario!,
@@ -42,7 +38,7 @@ export class GestionProductosComponent implements OnInit {
     fechaEstimadaEntrega: '',
     horasEstimadas: 0,
     porcentajeCumplimiento: 0,
-    cronograma: '',
+    cronograma: false,
     observaciones: '',
     entregadoQa: 0,
     estadoSolicitudModificacion: 'NOS',
@@ -50,10 +46,26 @@ export class GestionProductosComponent implements OnInit {
     nombreUsuarioCompleto: `${this.usuario?.nombre} ${this.usuario?.apellido}`,
   }];
 
+  productoRevision: Producto = {
+    codProyecto: 0,
+    nombre: '',
+    mes: 0,
+    semana: '',
+    fechaEstimadaEntrega: '',
+    horasEstimadas: 0,
+    porcentajeCumplimiento: 0,
+    cronograma: false,
+    observaciones: '',
+    entregadoQa: 0,
+    estadoSolicitudModificacion: ''
+  };
+
   productos: Producto[] = [];
   proyectos: Proyecto[] = [];
   proyectoSeleccionado!: Proyecto;
   comentarioSolicitudModificacion: string = '';
+  displayLoad: boolean = false;
+  erroresReportados: ErrorQA[] = [];
 
   meses: Mes[] = this.incializarMeses();
   semanas: string[] = [];
@@ -78,6 +90,17 @@ export class GestionProductosComponent implements OnInit {
     'NOS': 'No solicitado'
   }
 
+  qaEstadosMap = {
+    'PRQ': 'Por revisar',
+    'APQ': 'Aprobado por QA',
+    'REQ': 'Rechazado por QA'
+  }
+
+  qaEstadosErrorMap = {
+    'COR': 'Corregido',
+    'PCO': 'Por corregir'
+  }
+
   constructor(private pmanagerService: PmanagerService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
@@ -92,8 +115,6 @@ export class GestionProductosComponent implements OnInit {
   ngOnInit(): void {
     this.obtenerProyectos();
     this.obtenerProductos();
-    console.log(this.fechaEntregaMin)
-    console.log(this.fechaEntregaMax)
   }
 
   guardarProducto() {
@@ -178,7 +199,7 @@ export class GestionProductosComponent implements OnInit {
           .subscribe((resp) => {
             producto.estadoSolicitudModificacion = resp.estadoSolicitudModificacion;
           });
-        this.proyectos = this.proyectos.filter((item) => item !== producto);
+        this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1);
         this.messageService.add({ severity: 'info', summary: 'Eliminación exitosa', detail: `Se ha eliminado el producto.` });
       },
       key: 'cancelarSolicitud'
@@ -187,18 +208,33 @@ export class GestionProductosComponent implements OnInit {
 
   verificarCumplimiento(producto: Producto, index: number) {
     if (this.valorAnterior !== producto.porcentajeCumplimiento) {
-      this.pmanagerService.modificarPorcentajeCumplimiento(producto)
+      this.pmanagerService.modificarPorcentajeCumplimiento(producto, this.usuario?.codUsuario!)
         .subscribe((resp) => {
           this.productos[this.productos.map(p => p.codProducto).indexOf(producto.codProducto)] = resp;
         });
     }
-    //console.log(index);
-    //this.productos[this.productos.map(p => p.codProducto).indexOf(producto.codProducto)].cronograma = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    //console.log(this.productos.map(p => p.codProducto).indexOf(producto.codProducto));
   }
 
   capturarAnterior(producto: Producto) {
     this.valorAnterior = producto.porcentajeCumplimiento;
+  }
+
+  cambiarCronograma(producto: Producto) {
+    this.pmanagerService.modificarCronograma(producto)
+      .subscribe((resp) => {
+        if (resp) {
+          producto.cronograma = resp.cronograma;
+        }
+      });
+  }
+
+  cambiarObservaciones(producto: Producto) {
+    this.pmanagerService.modificarObservaciones(producto)
+      .subscribe((resp) => {
+        if (resp) {
+          producto.observaciones = resp.observaciones;
+        }
+      })
   }
 
   consultar() {
@@ -216,28 +252,45 @@ export class GestionProductosComponent implements OnInit {
 
   clonedProducts: { [s: number]: Producto; } = {};
 
-  editar(product: Producto) {
+  editar(producto: Producto) {
     this.llenarSemanasModificacionProducto();
-    this.clonedProducts[product.codProducto!] = { ...product };
+    this.clonedProducts[producto.codProducto!] = { ...producto };
   }
 
 
   guardarCambios(producto: Producto) {
     delete this.clonedProducts[producto.codProducto!];
-    if (producto.fechaEstimadaEntrega!.length !== undefined) {
-      let fechaEst = new Date(producto.fechaEstimadaEntrega!);
-      fechaEst.setDate(fechaEst.getDate() + 1);
-      producto.fechaEstimadaEntrega = fechaEst.toISOString();
+    if (producto.nombre.trim().length === 0) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El nombre del producto es obligatorio.' });
+      return;
     }
-    let sp = producto.semana.split("-");
-    producto.semana = new Date(parseInt(sp[2]), parseInt(sp[1]) - 1, parseInt(sp[0])).toISOString();
+    else if (producto.fechaEstimadaEntrega === null) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'La fecha estimada del producto es obligatoria.' });
+      return;
+    }
+    else if (producto.horasEstimadas === null) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Las horas estimadas del producto son obligatorias.' });
+      return;
+    }
     this.pmanagerService.modificarProducto(producto)
       .subscribe((resp) => {
-        console.log(producto)
-        console.log(resp)
         this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Se actualizó el producto' });
         this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, resp);
       });
+  }
+
+  campoValido(campo: string): boolean {
+    return this.crearFormulario?.controls[campo]?.invalid
+      && this.crearFormulario?.controls[campo]?.touched
+  }
+
+  showLoadDialog(producto: Producto) {
+    this.productoRevision = { ...producto };
+    this.displayLoad = true;
+    this.pmanagerService.obtenerErroresProducto(this.productoRevision.codProducto!)
+      .subscribe((errores) => {
+        this.erroresReportados = errores;
+      })
   }
 
   cancelarCambios(product: Producto, index: number) {
@@ -249,6 +302,10 @@ export class GestionProductosComponent implements OnInit {
     let suma = avance === 'siguiente' ? 1 : -1;
     let fecha = new Date();
     let day = new Date().getDay();
+    if (suma === -1) {
+      fecha.setDate(fecha.getDate() + suma);
+      day = fecha.getDay();
+    }
     while (true) {
       if (day === 4) {
         return fecha;
@@ -279,7 +336,7 @@ export class GestionProductosComponent implements OnInit {
     let dia = fecha.getDay();
     while (this.semanasModificar.length === 0) {
       if (dia === 4) {
-        this.semanasModificar.push(`${fecha.getDate()}-${fecha.getMonth() + 1}-${fecha.getFullYear()}`);
+        this.semanasModificar.push(this.estructurarFecha(fecha));
       }
       semanaActual = new Date(fecha.toISOString());
       fecha.setDate(fecha.getDate() + 1);
@@ -287,18 +344,24 @@ export class GestionProductosComponent implements OnInit {
     }
     while (this.semanasModificar.length < 3) {
       if (dia === 4) {
-        this.semanasModificar.push(`${fecha.getDate()}-${fecha.getMonth() + 1}-${fecha.getFullYear()}`);
+        this.semanasModificar.push(this.estructurarFecha(fecha));
       }
       fecha.setDate(fecha.getDate() + 1);
       dia = fecha.getDay();
     }
     while (this.semanasModificar.length < 5) {
       if (dia === 4) {
-        this.semanasModificar.unshift(`${semanaActual.getDate()}-${semanaActual.getMonth() + 1}-${semanaActual.getFullYear()}`);
+        this.semanasModificar.unshift(this.estructurarFecha(semanaActual));
       }
       semanaActual.setDate(semanaActual.getDate() - 1);
       dia = semanaActual.getDay();
     }
+  }
+
+  private estructurarFecha(fecha: Date) {
+    let diaAgregar = fecha.getDate() < 10 ? `0${fecha.getDate().toString()}` : fecha.getDate().toString();
+    let mesAgregar = fecha.getMonth() < 10 ? `0${(fecha.getMonth() + 1).toString()}` : (fecha.getMonth() + 1).toString();
+    return `${diaAgregar}-${mesAgregar}-${fecha.getFullYear()}`;
   }
 
   incializarMeses(): Mes[] {

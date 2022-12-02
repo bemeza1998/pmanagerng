@@ -7,6 +7,7 @@ import { GestionProductosComponent } from './pages/gestion-productos/gestion-pro
 import { GestionProyectosComponent } from './pages/gestion-proyectos/gestion-proyectos.component';
 import { ModificacionProductosComponent } from './pages/modificacion-productos/modificacion-productos.component';
 import { ModificacionProyectosComponent } from './pages/modificacion-proyectos/modificacion-proyectos.component';
+import { GestionEmpresasComponent } from './pages/gestion-empresas/gestion-empresas.component';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { ModificacionProyectosComponent } from './pages/modificacion-proyectos/m
     GestionProductosComponent,
     ModificacionProductosComponent,
     CalidadProductosComponent,
-    ModificacionProyectosComponent
+    ModificacionProyectosComponent,
+    GestionEmpresasComponent
   ],
   imports: [
     CommonModule,

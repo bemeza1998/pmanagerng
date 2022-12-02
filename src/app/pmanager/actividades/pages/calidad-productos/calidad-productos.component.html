@@ -8,16 +8,19 @@
                 placeholder="Proyectos" optionLabel="nombre" optionValue="codProyecto"></p-dropdown>
         </div>
         <div class="flex flex-row m-auto">
-            <p class="pt-3 mr-5">Nombre creador</p>
-            <input pInputText required [(ngModel)]="nombreCreador" name="nombreCreador" placeholder="Nombre del creador"
-                type="text" />
+            <p class="pt-3 mr-5">Usuario</p>
+            <p-dropdown [showClear]="true" [options]="usuarios" [(ngModel)]="usuarioSeleccionado" name="usuario"
+                placeholder="Usuarios" optionLabel="nombreCompleto" optionValue="nombreCompleto">
+            </p-dropdown>
+            <!-- <input pInputText required [(ngModel)]="nombreCreador" name="nombreCreador" placeholder="Nombre del usuario"
+                type="text" /> -->
         </div>
     </div>
     <div class="flex flex-row justify-content-around mt-3">
         <div class="flex flex-row">
             <p class="pt-3 mr-5">Porcentaje cumplimiento</p>
-            <input pInputText required [(ngModel)]="porcentajeCumplimiento" name="porcentajeCumplimiento"
-                placeholder="Porcentaje" type="number" />
+            <p-inputNumber [step]="10" name="porcentajeCumplimiento" [showButtons]="true"
+                [(ngModel)]="porcentajeCumplimiento" [min]="0" [max]="100"></p-inputNumber>
         </div>
         <div class="flex flex-row">
             <p class="pt-3 mr-5">Mes</p>
@@ -36,8 +39,9 @@
         <button pButton pRipple label="Consultar todo" (click)="obtenerProductos()" class="m-auto w-2"></button>
     </div>
 </div>
-<p-table [value]="productos" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
-    [rowsPerPageOptions]="[10,25,50]" dataKey="codProducto" editMode="row">
+<p-table [loading]="loading" [lazy]="true" (onLazyLoad)="cargarTabla()" [value]="productos" [paginator]="true"
+    [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]"
+    dataKey="codProducto" styleClass="p-datatable-sm">
     <ng-template pTemplate="header">
         <tr>
             <th>Semana</th>
@@ -46,90 +50,55 @@
             <th>Producto</th>
             <th>Fecha estimada entrega</th>
             <th>Horas Estimadas Producto</th>
+            <th>Fecha real entrega</th>
             <th>% Cumplimiento</th>
             <th>Cronograma</th>
             <th>Observaciones</th>
-            <th>Prod. Ent. a QA</th>
-            <th>Errores Rep. QA</th>
+            <th>Revisión QA</th>
+            <th>Estado QA</th>
+            <th>Errores Reportados</th>
             <th>Errores Corregidos</th>
-            <th>Prod. Apro. QA</th>
-            <th>Prod. Rech. QA</th>
             <th>Observaciones QA</th>
-            <th>Acciones</th>
         </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-producto let-editing="editing" let-ri="rowIndex">
+    <ng-template pTemplate="body" let-producto let-ri="rowIndex">
         <tr [pEditableRow]="producto">
-            <td class="text-right">{{producto.semana | date:'dd-MM-yyyy' }}</td>
+            <td class="text-right">{{producto.semana }}</td>
             <td class="text-right">{{producto.nombreUsuarioCompleto}}</td>
             <td class="text-right">{{producto.proyecto.nombre}}</td>
             <td class="text-right">{{producto.nombre}}</td>
-            <td class="text-right">{{producto.fechaEstimadaEntrega | date:'dd-MM-yyyy' }}</td>
+            <td class="text-right">{{producto.fechaEstimadaEntrega }}</td>
             <td class="text-right">{{producto.horasEstimadas}}</td>
-            <td class="text-right">{{producto.porcentajeCumplimiento}}</td>
-            <td class="text-right">{{producto.cronograma}}</td>
+            <td class="text-right">{{producto.fechaRealEntrega | date:'dd-MM-yyyy'}}</td>
+            <td class="text-right">
+                <p-inputNumber [step]="10" (onFocus)="capturarAnterior(producto)"
+                    (onBlur)="verificarCumplimiento(producto)" [showButtons]="true"
+                    [(ngModel)]="producto.porcentajeCumplimiento" [min]="0" [max]="100">
+                </p-inputNumber>
+            </td>
+            <td class="text-right">
+                <p-checkbox [disabled]="true" [(ngModel)]="producto.cronograma" [binary]="true"
+                    inputId="obs_{{producto.codProducto}}">
+                </p-checkbox>
+            </td>
             <td class="text-right">{{producto.observaciones}}</td>
             <td class="text-right">
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText [(ngModel)]="producto.entregadoQa" type="number">
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{producto.entregadoQa}}
-                    </ng-template>
-                </p-cellEditor>
+                <p-button (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check" iconPos="left">
+                </p-button>
             </td>
             <td class="text-right">
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText [(ngModel)]="producto.qaErroresReportados" type="number">
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{producto.qaErroresReportados}}
-                    </ng-template>
-                </p-cellEditor>
+                {{producto.qaEstado | i18nSelect: qaEstadosMap}}
             </td>
             <td class="text-right">
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText [(ngModel)]="producto.qaErroesCorregidos" type="number">
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{producto.qaErroesCorregidos}}
-                    </ng-template>
-                </p-cellEditor>
+                {{producto.qaErroresReportados}}
             </td>
             <td class="text-right">
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText [(ngModel)]="producto.qaProductosAprobados" type="number">
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{producto.qaProductosAprobados}}
-                    </ng-template>
-                </p-cellEditor>
+                {{producto.qaErroesCorregidos}}
             </td>
             <td class="text-right">
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText [(ngModel)]="producto.qaProductosRechazados" type="number">
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{producto.qaProductosRechazados}}
-                    </ng-template>
-                </p-cellEditor>
+                {{producto.qaObservaciones}}
             </td>
-            <td class="text-right">
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText [(ngModel)]="producto.qaObservaciones">
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{producto.qaObservaciones}}
-                    </ng-template>
-                </p-cellEditor>
-            </td>
-            <td style="text-align:center">
+            <!-- <td style="text-align:center">
                 <button *ngIf="!editing" pButton pRipple type="button" pInitEditableRow icon="pi pi-pencil"
                     (click)="editar(producto)" class="p-button-rounded p-button-text"></button>
                 <button *ngIf="editing" pButton pRipple type="button" pSaveEditableRow icon="pi pi-check"
@@ -138,10 +107,122 @@
                 <button *ngIf="editing" pButton pRipple type="button" pCancelEditableRow icon="pi pi-times"
                     (click)="cancelarCambios(producto, ri)"
                     class="p-button-rounded p-button-text p-button-danger"></button>
-            </td>
+            </td> -->
         </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
         <p>No se han encontrado registros con los parámetros indicados.</p>
     </ng-template>
 </p-table>
+<p-dialog header="Revisión de producto" [(visible)]="displayLoad" [breakpoints]="{'960px': '75vw'}"
+    [style]="{width: '55vw'}" [draggable]="true" [resizable]="false">
+    <form novalidate>
+        <div class="p-fluid">
+            <div class="field mt-2 px-4">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-6 md:col-2">
+                            Producto:
+                        </div>
+                        <div class="field col-6 md:col-3">
+                            {{productoRevision.nombre}}
+                        </div>
+                        <div class="field col-8 md:col-3">
+                            % Cumplimento:
+                        </div>
+                        <div class="field col-4 md:col-1">
+                            {{productoRevision.porcentajeCumplimiento}}
+                        </div>
+                        <div class="field col-4 md:col-3">
+                            <p-button
+                                [disabled]="productoRevision.qaErroresReportados! === productoRevision.qaErroesCorregidos! ? false : true"
+                                (click)="displayLoad=false" (onClick)="aprobarProducto(productoRevision)"
+                                label="Aprobar" styleClass="p-buttont">
+                            </p-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field px-2">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="col-8">
+                            Observaciones
+                        </div>
+                        <div class="col-4">
+                            <p-button (onClick)="guardarObservacion(productoRevision)" label="Guardar observaciones"
+                                styleClass="p-buttont"></p-button>
+                        </div>
+                        <div class="field col-12">
+                            <textarea [(ngModel)]="productoRevision.qaObservaciones" [rows]="3" [cols]="30"
+                                name="qaObservaciones" pInputTextarea [autoResize]="true"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field px-2">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-7 md:col-9">
+                            <input type="text" pInputText required [(ngModel)]="error" placeholder="Detalle de error"
+                                name="error">
+                        </div>
+                        <div class="field col-5 md:col-3">
+                            <p-button (onClick)="agregarError()" label="Reportar" styleClass="p-buttont"></p-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field px-2">
+                <!-- <div class="flex flex-column" *ngFor="let errorqa of erroresReportados; let i = index">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-6 md:col-8">
+                            {{errorqa.errorReportado}}
+                        </div>
+                        <div class="field col-6 md:col-3">
+                            <button (click)="corregirError(errorqa)" pButton type="button"
+                                label="{{errorqa.estadoError === 'PCO' ? 'Por corregir' : 'Corregido'}}"
+                                [class]="claseBoton(errorqa)"></button>
+                        </div>
+                        <div class="field col-6 md:col-1">
+                            <button (click)="eliminarError(errorqa)" pButton icon="pi pi-trash" pRipple type="button"
+                                class="p-button-rounded p-button-danger"></button>
+                        </div>
+                    </div>
+                </div> -->
+                <div class="card">
+                    <p-table *ngIf="productoRevision.qaErroresReportados !== 0" [value]="erroresReportados"
+                        styleClass="p-datatable-sm">
+                        <ng-template pTemplate="caption">
+                            Detalle de errores QA
+                        </ng-template>
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th style="width: 70%;">Error reportado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-errorqa>
+                            <tr>
+                                <td>{{errorqa.errorReportado}}</td>
+                                <td>
+                                    <div class="grid p-fluid mt-2">
+                                        <div class="field col-6 md:col-8">
+                                            <button (click)="corregirError(errorqa)" pButton type="button"
+                                                label="{{errorqa.estadoError === 'PCO' ? 'Por corregir' : 'Corregido'}}"
+                                                [class]="claseBoton(errorqa)"></button>
+                                        </div>
+                                        <div class="field col-6 md:col-4">
+                                            <button (click)="eliminarError(errorqa)" pButton icon="pi pi-trash" pRipple
+                                                type="button" class="p-button-rounded p-button-danger"></button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </div>
+        </div>
+    </form>
+</p-dialog>

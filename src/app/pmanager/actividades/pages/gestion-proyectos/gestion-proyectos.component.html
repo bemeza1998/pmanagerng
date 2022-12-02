@@ -29,16 +29,18 @@
     </ng-template>
 </p-confirmDialog>
 <p-toast></p-toast>
+<h1>Gestión de proyectos</h1>
 <button pButton pRipple label="Crear proyecto" class="min-w-min mx-3 w-3" (click)="showLoadDialog()"></button>
-<p-table editMode="row" dataKey="codProyecto" [value]="proyectos" [paginator]="true" [rows]="10"
-    [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]">
+<p-table [loading]="loading" [lazy]="true" (onLazyLoad)="cargarTabla()" editMode="row" dataKey="codProyecto"
+    [value]="proyectos" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
+    [rowsPerPageOptions]="[10,25,50]">
     <ng-template pTemplate="header">
         <tr>
             <th>Cod. proyecto</th>
-            <th>Nombre empresa</th>
-            <th>Usuario creador</th>
-            <th>Nombre proyecto</th>
-            <th>Descripcion</th>
+            <th>Nombre empresa<span style="width: 100px; display: block;"></span></th>
+            <th>Usuario creador<span style="width: 100px; display: block;"></span></th>
+            <th>Nombre proyecto<span style="width: 150px; display: block;"></span></th>
+            <th>Descripcion<span style="width: 150px; display: block;"></span></th>
             <th>Estado</th>
             <th>Valor entrega</th>
             <th>Días contrato</th>
@@ -168,9 +170,6 @@
             </tr>
         </ng-template>
     </ng-template>
-    <ng-template pTemplate="loadingbody">
-        <p-progressSpinner></p-progressSpinner>
-    </ng-template>
     <ng-template pTemplate="emptymessage">
         <p>No se han encontrado registros con los parámetros indicados.</p>
     </ng-template>
@@ -178,7 +177,7 @@
 
 <p-dialog header="Crear un proyecto" [(visible)]="displayLoad" [breakpoints]="{'960px': '75vw'}"
     [style]="{width: '60vw'}" [draggable]="true" [resizable]="false">
-    <form novalidate>
+    <form #crearProyecto="ngForm">
         <div class="p-fluid">
             <div class="field mt-2 px-4">
                 <div class="flex flex-column">
@@ -187,79 +186,81 @@
                             <p style="text-align:right;" class="pt-3 mr-2">Cod. proyecto: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="text" pInputText placeholder="Identificador" required
+                            <input type="text" pInputText placeholder="Identificador" [required]="true"
                                 [(ngModel)]="identificadorProyecto" name="identificadorProyecto">
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Nombre proyecto: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="text" pInputText placeholder="Nombre" required [(ngModel)]="nombre"
+                            <input type="text" pInputText placeholder="Nombre" [required]="true" [(ngModel)]="nombre"
                                 name="nombre">
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Descripcion: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="text" pInputText placeholder="Descripcion" required [(ngModel)]="descripcion"
-                                name="descripcion">
+                            <input type="text" pInputText placeholder="Descripcion" [required]="true"
+                                [(ngModel)]="descripcion" name="descripcion">
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Nombre empresa: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="text" pInputText placeholder="Empresa" required [(ngModel)]="nombreEmpresa"
-                                name="nombreEmpresa">
+                            <p-dropdown [required]="true" [options]="empresas" [(ngModel)]="codEmpresa"
+                                name="codEmpresa" placeholder="Empresas" optionLabel="nombreEmpresa"
+                                optionValue="codEmpresa">
+                            </p-dropdown>
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Valor entrega: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="text" pInputText required [(ngModel)]="valorEntrega"
+                            <input type="number" pInputText [required]="true" [(ngModel)]="valorEntrega"
                                 placeholder="Valor entrega" name="valorEntrega" (input)="calcularValorDia()">
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Días contrato: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="numeric" pInputText required [(ngModel)]="diasContrato"
+                            <input type="number" pInputText [required]="true" [(ngModel)]="diasContrato"
                                 placeholder="Días contrat" name="diasContrato" (input)="calcularValorDia()">
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Valor día: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="numeric" pInputText required [(ngModel)]="valorDia" placeholder="Valor día"
+                            <input type="numeric" pInputText [(ngModel)]="valorDia" placeholder="Valor día"
                                 name="valorDia" disabled="true">
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Valor hora: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <input type="number" pInputText required [(ngModel)]="valorHora" placeholder="Valor hora"
+                            <input type="number" pInputText [(ngModel)]="valorHora" placeholder="Valor hora"
                                 name="valorHora" disabled="true">
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Fecha inicio: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <p-calendar appendTo="body" [(ngModel)]="fechaInicio" name="fechaInicio" [showIcon]="true"
-                                [showButtonBar]="true"></p-calendar>
+                            <p-calendar [required]="true" appendTo="body" [(ngModel)]="fechaInicio" name="fechaInicio"
+                                [showIcon]="true" [showButtonBar]="true"></p-calendar>
                         </div>
                         <div class="field col-6 md:col-2">
                             <p style="text-align:right;" class="pt-3 mr-2">Fecha fin: </p>
                         </div>
                         <div class="field col-6 md:col-4">
-                            <p-calendar appendTo="body" [(ngModel)]="fechaFinalizacion" name="fechaFinalizacion"
-                                [showIcon]="true" [showButtonBar]="true"></p-calendar>
+                            <p-calendar [required]="true" appendTo="body" [(ngModel)]="fechaFinalizacion"
+                                name="fechaFinalizacion" [showIcon]="true" [showButtonBar]="true"></p-calendar>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="flex justify-content-end">
-            <p-button (click)="displayLoad=false" label="Crear" styleClass="p-buttont" (onClick)="keyboardSubmit()">
-            </p-button>
+            <button [disabled]="crearProyecto.invalid" (click)="keyboardSubmit()" type="submit" pButton>Guardar
+                proyecto</button>
             <p-button (click)="displayLoad=false" label="Cancelar" styleClass="p-button-text"></p-button>
         </div>
     </form>

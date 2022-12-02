@@ -3,6 +3,9 @@ import { MessageService } from 'primeng/api';
 import { Producto } from 'src/app/pmanager/interfaces/producto.interface';
 import { Proyecto } from 'src/app/pmanager/interfaces/proyecto.interface';
 import { PmanagerService } from '../../../services/pmanager.service';
+import { ErrorQA } from '../../../interfaces/errorQa.inteface';
+import { Usuario } from 'src/app/pmanager/interfaces/usuario.interface';
+import { AutenticacionService } from '../../../services/autenticacion.service';
 
 interface Mes {
   numero: number,
@@ -18,23 +21,55 @@ interface Mes {
 })
 export class CalidadProductosComponent implements OnInit {
 
+  displayLoad: boolean = false;
   productos: Producto[] = [];
   proyectos: Proyecto[] = [];
   proyectoSeleccionado: number = 0;
-  nombreCreador: string = '';
   meses: Mes[] = this.incializarMeses();
   mesSeleccionado!: number;
   semanas: string[] = [];
   semanaSeleccionada: string = '';
   porcentajeCumplimiento!: number;
+  valorAnterior: number = 0;
+
+  productoRevision: Producto = {
+    codProyecto: 0,
+    nombre: '',
+    mes: 0,
+    semana: '',
+    fechaEstimadaEntrega: '',
+    horasEstimadas: 0,
+    porcentajeCumplimiento: 0,
+    cronograma: false,
+    observaciones: '',
+    entregadoQa: 0,
+    estadoSolicitudModificacion: ''
+  };
+  error: string = '';
+  erroresReportados: ErrorQA[] = [];
+  usuarios: Usuario[] = [];
+  usuarioSeleccionado: string = '';
+  loading: boolean = false;
+
+  qaEstadosMap = {
+    'PRQ': 'Por revisar',
+    'APQ': 'Aprobado por QA',
+    'REQ': 'Rechazado por QA'
+  }
 
   constructor(
     private pmanagerService: PmanagerService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private autenticacionService: AutenticacionService
   ) { }
+
+  cargarTabla() {
+    this.loading = true;
+  }
 
   ngOnInit(): void {
     this.obtenerProductos();
+    this.obtenerUsuarios();
     this.pmanagerService.obtenerPorJefatura(1)
       .subscribe((proyectos) => {
         this.proyectos = proyectos;
@@ -42,10 +77,19 @@ export class CalidadProductosComponent implements OnInit {
   }
 
   obtenerProductos() {
-    this.pmanagerService.obtenerProductosTodos()
+    this.pmanagerService.obtenerProductosTodos(this.obtenerSemana())
       .subscribe((productos) => {
         this.productos = productos;
+        this.loading = false;
       })
+  }
+
+  obtenerUsuarios() {
+    this.pmanagerService.obtenerUsuariosPerfil('REC')
+      .subscribe((usuarios) => {
+        usuarios.map((u) => u.nombreCompleto = u.nombre + " " + u.apellido);
+        this.usuarios = usuarios;
+      });
   }
 
   llenarSemanas() {
@@ -64,29 +108,28 @@ export class CalidadProductosComponent implements OnInit {
 
   obtenerSemana() {
     let fecha = new Date();
-    let day = new Date().getDay();
+    let dia = new Date().getDay();
     while (true) {
-      if (day === 4) {
-        //console.log(fecha.toDateString())
-        return fecha;
+      if (dia === 4) {
+        break;
       }
-      fecha.setDate(fecha.getDate() - 1);
-      day = fecha.getDay();
+      fecha.setDate(fecha.getDate() + 1);
+      dia = fecha.getDay();
     }
+    return fecha.toLocaleDateString('es-EC', { year: 'numeric', month: '2-digit', day: '2-digit' });
   }
 
   consultar() {
     this.pmanagerService.obtenerProductosPorFiltro(
       this.proyectoSeleccionado ?? '',
-      this.nombreCreador,
+      this.usuarioSeleccionado ?? '',
       this.porcentajeCumplimiento ?? '',
       this.semanaSeleccionada,
       ''
-    )
-      .subscribe((productos) => {
-        console.log(productos)
-        this.productos = productos;
-      });
+    ).subscribe((productos) => {
+      this.productos = productos;
+      this.loading = false;
+    });
   }
 
   datosCalidad(producto: Producto) {
@@ -141,7 +184,6 @@ export class CalidadProductosComponent implements OnInit {
 
 
   guardarCambios(producto: Producto) {
-    //if (product.price > 0) {
     delete this.clonedProducts[producto.codProducto!];
     this.pmanagerService.modificarProductoQA(producto)
       .subscribe((resp) => {
@@ -149,17 +191,106 @@ export class CalidadProductosComponent implements OnInit {
           { severity: 'success', summary: 'Actualizado', detail: 'Se actualizó el producto' }
         );
       });
-
-    //this.messageService.add({severity:'success', summary: 'Success', detail:'Product is updated'});
-    //}  
-    //else {
-    //this.messageService.add({severity:'error', summary: 'Error', detail:'Invalid Price'});
-    //}
   }
 
   cancelarCambios(producto: Producto, index: number) {
     this.productos[index] = this.clonedProducts[producto.codProducto!];
-    //delete this.productos[product.codProducto!];
+  }
+
+  verificarCumplimiento(producto: Producto) {
+    if (this.valorAnterior !== producto.porcentajeCumplimiento) {
+      this.pmanagerService.modificarPorcentajeCumplimiento(producto, this.autenticacionService.usuarioAutenticado?.codUsuario!)
+        .subscribe((resp) => {
+          producto.fechaRealEntrega = resp.fechaRealEntrega;
+        });
+    }
+  }
+
+  capturarAnterior(producto: Producto) {
+    this.valorAnterior = producto.porcentajeCumplimiento;
+  }
+
+  showLoadDialog(producto: Producto): void {
+    this.error = '';
+    this.productoRevision = { ...producto };
+    this.displayLoad = true;
+    this.pmanagerService.obtenerErroresProducto(this.productoRevision.codProducto!)
+      .subscribe((errores) => {
+        this.erroresReportados = errores;
+      })
+  }
+
+  agregarError() {
+    if (this.error.trim().length === 0)
+      return;
+    const errorQa: ErrorQA = {
+      codProducto: this.productoRevision.codProducto!,
+      codUsuario: this.productoRevision.codUsuario!,
+      errorReportado: this.error,
+      estadoError: ''
+    }
+    this.pmanagerService.crearErrorProducto(errorQa)
+      .subscribe((errorqa) => {
+        this.erroresReportados.push(errorqa);
+        this.error = '';
+        this.pmanagerService.obtenerProductoQA(errorqa.codUsuario, errorqa.codProducto)
+          .subscribe((producto) => {
+            this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, producto);
+            this.productoRevision = { ...producto };
+          })
+      })
+  }
+
+  corregirError(errorQa: ErrorQA) {
+    errorQa.estadoError = errorQa.estadoError === 'PCO' ? 'COR' : 'PCO';
+    this.pmanagerService.cambiarEstadoError(errorQa)
+      .subscribe((error) => {
+        this.erroresReportados.splice(this.erroresReportados.map(e => e.codErrorQa).indexOf(errorQa.codErrorQa), 1, error);
+        this.pmanagerService.obtenerProductoQA(error.codUsuario, error.codProducto)
+          .subscribe((producto) => {
+            this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, producto);
+            this.productoRevision = { ...producto };
+          })
+      })
+  }
+
+  guardarObservacion(producto: Producto) {
+    this.pmanagerService.modificarObservacionQA(producto)
+      .subscribe((resp) => {
+        this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, resp);
+        this.productoRevision = { ...resp };
+      })
+  }
+
+  claseBoton(errorQa: ErrorQA) {
+    return errorQa.estadoError === 'PCO' ? 'p-button-danger' : 'p-button-success';
+  }
+
+  eliminarError(errorQa: ErrorQA) {
+    this.pmanagerService.eliminarError(errorQa.codErrorQa!)
+      .subscribe(() => {
+        this.erroresReportados.splice(this.erroresReportados.map(e => e.codErrorQa).indexOf(errorQa.codErrorQa), 1);
+        this.pmanagerService.obtenerProductoQA(errorQa.codUsuario, errorQa.codProducto)
+          .subscribe((producto) => {
+            this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, producto);
+            this.productoRevision = { ...producto };
+          })
+      })
+  }
+
+  aprobarProducto(producto: Producto) {
+    if (producto.porcentajeCumplimiento != 100) {
+      this.messageService.add(
+        { severity: 'error', summary: 'Error', detail: 'No se puede aprobar un producto sin el 100% de cumplimiento.' }
+      );
+      return;
+    }
+    producto.qaEstado = 'APQ'
+    this.pmanagerService.modificarEstadoQA(producto)
+      .subscribe((resp) => {
+        this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, resp);
+        this.productoRevision = { ...resp };
+      })
   }
 
 }

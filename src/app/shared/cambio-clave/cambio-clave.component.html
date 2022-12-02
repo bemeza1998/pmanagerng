@@ -1,0 +1,67 @@
+<p-toast position="top-center"></p-toast>
+<div style="width: 1200px;" class="flex flex-wrap justify-content-center">
+    <p-card class="md-12 md:col-4" styleClass="p-card-shadow">
+        <h3 class="text-center">Cambiar contraseña</h3>
+        <form [formGroup]="formCambioClave" (ngSubmit)="cambiarClave()">
+            <div class="p-fluid">
+                <div class="field">
+                    <div class="col-12">
+                        <p for="codUsuario">Contraseña anterior</p>
+                        <span class="p-input-icon-right mb-3">
+                            <i class="pi pi-user"></i>
+                            <p-password id="clave" [feedback]="false" formControlName="claveAnterior"
+                                placeholder="Ingrese su contraseña anterior" [toggleMask]="true"
+                                styleClass="p-password p-component p-inputwrapper p-input-icon-right">
+                            </p-password>
+                        </span>
+                        <div *ngIf="campoEsValido('claveAnterior')">
+                            <small id="username-help" class="p-error">
+                                Este campo es obligatorio.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="col-12">
+                        <p for="clave">Nueva contraseña</p>
+                        <div class="mb-3">
+                            <p-password id="clave" [feedback]="false" formControlName="claveNueva"
+                                placeholder="Ingrese su nueva contraseña" [toggleMask]="true"
+                                styleClass="p-password p-component p-inputwrapper p-input-icon-right">
+                            </p-password>
+                        </div>
+                        <div *ngIf="campoEsValido('claveNueva')">
+                            <small id="username-help" class="p-error">
+                                Este campo es obligatorio.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="col-12">
+                        <p for="clave">Repetir nueva contraseña</p>
+                        <div class="mb-3">
+                            <p-password id="clave" [feedback]="false" formControlName="claveRepetir"
+                                placeholder="Repita su nueva contraseña" [toggleMask]="true"
+                                styleClass="p-password p-component p-inputwrapper p-input-icon-right">
+                            </p-password>
+                        </div>
+                        <div *ngIf="campoEsValido('claveRepetir')">
+                            <small id="username-help" class="p-error">
+                                Este campo es obligatorio.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="col-12">
+                        <button label="Cambiar contraseña" [disabled]="formCambioClave.invalid" type="submit"
+                            class="min-w-max" pButton></button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </p-card>
+</div>

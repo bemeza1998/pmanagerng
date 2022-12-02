@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { LazyLoadEvent, MessageService } from 'primeng/api';
 import { Estado } from 'src/app/pmanager/interfaces/estado.interface';
 import { Usuario } from 'src/app/pmanager/interfaces/usuario.interface';
 import { PmanagerService } from 'src/app/pmanager/services/pmanager.service';
 import { Perfil } from '../../../interfaces/perfil.interface';
+import { Jefatura } from '../../../interfaces/jefatura.interface';
 
 @Component({
   selector: 'app-gestion-usuarios',
@@ -16,7 +17,7 @@ export class GestionUsuariosComponent implements OnInit {
   usuarios: Usuario[] = [];
   displayLoad: boolean = false;
   codUsuario: string = '';
-  jefaturas: number[] = [];
+  jefaturas: Jefatura[] = [];
   codJefatura: number = 0;
   perfiles: Perfil[] = [];
   codPerfil: string = '';
@@ -25,12 +26,27 @@ export class GestionUsuariosComponent implements OnInit {
   mail: string = '';
   usuariosClonados: { [s: string]: Usuario; } = {};
   estados: Estado[] = [];
+  loading: boolean = false;
+
+  estadosMap = {
+    'ACT': 'Activo',
+    'INA': 'Inactivo'
+  }
 
   constructor(
     private pmanagerService: PmanagerService,
     private messageService: MessageService
   ) {
-    this.jefaturas = [1, 2];
+    this.jefaturas = [{
+      codJefatura: 1,
+      nombre: 'Operaciones',
+      siglas: 'OPER'
+    },
+    {
+      codJefatura: 2,
+      nombre: 'Recursos humanos',
+      siglas: 'RRHH'
+    }];
     this.estados = [
       {
         sigla: 'ACT',
@@ -55,7 +71,12 @@ export class GestionUsuariosComponent implements OnInit {
     this.pmanagerService.obtenerUsuarios('ALL')
       .subscribe((usuarios) => {
         this.usuarios = usuarios;
+        this.loading = false;
       })
+  }
+
+  cargarTabla() {
+    this.loading = true;
   }
 
   showLoadDialog(): void {
@@ -72,8 +93,6 @@ export class GestionUsuariosComponent implements OnInit {
       mail: this.mail,
       estado: ''
     };
-
-    console.log(usuario);
 
     this.pmanagerService.crearUsuario(usuario)
       .subscribe((usuario) => {

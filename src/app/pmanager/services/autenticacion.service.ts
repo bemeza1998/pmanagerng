@@ -1,11 +1,12 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, Observable, of, tap } from 'rxjs';
-import { Usuario } from 'src/app/types/usuario';
+
 import { environment } from 'src/environments/environment';
 import { Login } from '../../types/login';
 import { JWTResponse } from '../interfaces/JWTResponse.inteface';
+import { Usuario } from '../interfaces/usuario.interface';
 
 const URL = environment.baseUrl;
 
@@ -31,18 +32,40 @@ export class AutenticacionService {
             );
     }
 
+    public validarToken(): Observable<boolean> {
+
+        const url = `${URL}/usuario/renovar`;
+        const headers = new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        });
+
+        return this.http.get<Usuario>(url, { headers })
+            .pipe(
+                map(resp => {
+                    localStorage.setItem('token', resp.token!);
+                    this.usuarioAutenticado = {
+                        codUsuario: resp.codUsuario!,
+                        codPerfil: resp.codPerfil!,
+                        nombre: resp.nombre!,
+                        apellido: resp.apellido!,
+                        mail: resp.mail!,
+                        nombrePerfil: resp.nombrePerfil!
+                    }
+                    return true;
+                }),
+                catchError(err => of(false))
+            );
+
+    }
+
     public getUserDataFromLocalStorage(): Usuario | null {
         const rawUserData = localStorage.getItem('userData');
         return JSON.parse(rawUserData!);
     }
 
-    private saveUserDataToLocalStorage(usuario: Usuario): void {
-        if (usuario === null) return;
-        localStorage.setItem('userData', JSON.stringify(usuario));
-    }
-
     public cerrarSesion() {
-        localStorage.removeItem('userData');
-        this.router.navigateByUrl('/productos');
+        localStorage.clear();
+        this.router.navigateByUrl('/login');
     }
 }
