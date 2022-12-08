@@ -18,7 +18,8 @@
         </div>
         <div>
             <button type="button" pButton icon="pi pi-times" label="Cancelar" (click)="cd.reject()"></button>
-            <button type="button" pButton icon="pi pi-check" label="Enviar" (click)="cd.accept()"></button>
+            <button [disabled]="this.comentarioSolicitudModificacion.trim().length < 3" type="button" pButton
+                icon="pi pi-check" label="Enviar" (click)="cd.accept()"></button>
         </div>
     </ng-template>
 </p-confirmDialog>
@@ -63,9 +64,9 @@
                         <span *ngIf="campoValido('nombre')" class="text-red-500">Nombre obligatorio</span>
                     </td>
                     <td pEditableColumn>
-                        <p-calendar [minDate]="fechaEntregaMin" [maxDate]="fechaEntregaMax" [required]="true"
-                            name="fechaEstimadaEntrega" [showIcon]="true" appendTo="body"
-                            [(ngModel)]="producto.fechaEstimadaEntrega">
+                        <p-calendar dateFormat="dd-mm-yy" [minDate]="fechaEntregaMin" [maxDate]="fechaEntregaMax"
+                            [required]="true" name="fechaEstimadaEntrega" [showButtonBar]="true" [showIcon]="true"
+                            appendTo="body" [(ngModel)]="producto.fechaEstimadaEntrega">
                         </p-calendar>
                         <span *ngIf="campoValido('fechaEstimadaEntrega')" class="text-red-500">Fecha obligatoria</span>
                     </td>
@@ -153,11 +154,8 @@
             </th>
             <th>Observaciones
             </th>
-            <th>Revisión QA</th>
             <th>Estado QA</th>
-            <!-- <th>Errores Reportados</th>
-            <th>Errores Corregidos</th>
-            <th>Observaciones QA</th> -->
+            <th>Revisión feedback QA</th>
             <th style="width: 250px;">Solicitud modificación
             </th>
             <th>Acciones</th>
@@ -250,29 +248,15 @@
                 </p-cellEditor>
             </td>
             <td class="text-right">
-                <p-cellEditor>
-                    <ng-template pTemplate="input">
-                        <input pInputText type="text" [(ngModel)]="producto.observaciones">
-                    </ng-template>
-                    <ng-template pTemplate="output">
-                        {{producto.observaciones}}
-                    </ng-template>
-                </p-cellEditor>
+                <p-button (click)="mostrarObservaciones(producto)" label="Ingresar" icon="pi pi-comments"
+                    iconPos="left">
+                </p-button>
             </td>
+            <td class="text-right">{{producto.qaEstado | i18nSelect: qaEstadosMap}}</td>
             <td class="text-right">
                 <p-button (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check" iconPos="left">
                 </p-button>
             </td>
-            <td class="text-right">{{producto.qaEstado | i18nSelect: qaEstadosMap}}</td>
-            <!-- <td class="text-right">
-                {{producto.qaErroresReportados}}
-            </td>
-            <td class="text-right">
-                {{producto.qaErroesCorregidos}}
-            </td>
-            <td class="text-right">
-                {{producto.qaObservaciones}}
-            </td> -->
             <td class="text-right">
                 {{producto.estadoSolicitudModificacion | i18nSelect: estadoSolicitudMap}}
             </td>
@@ -292,7 +276,7 @@
                 <td style="width: 100px;" class="text-right">{{producto.semana }}</td>
                 <td class="text-right">{{producto.proyecto.nombre}}</td>
                 <td class="text-right">{{producto.nombre}}</td>
-                <td class="text-right">{{producto.fechaEstimadaEntrega | date:'dd-MM-yyyy' }}</td>
+                <td class="text-right">{{producto.fechaEstimadaEntrega }}</td>
                 <td class="text-right">{{producto.horasEstimadas}}</td>
                 <td class="text-right">
                     <p-inputNumber [step]="10" (onFocus)="capturarAnterior(producto)"
@@ -306,23 +290,16 @@
                         [binary]="true" inputId="obs_{{producto.codProducto}}"></p-checkbox>
                 </td>
                 <td class="text-right">
-                    <input (change)="cambiarObservaciones(producto)" pInputText type="text"
-                        [(ngModel)]="producto.observaciones">
+                    <p-button (click)="mostrarObservaciones(producto)" label="Ingresar" icon="pi pi-comments"
+                        iconPos="left">
+                    </p-button>
                 </td>
+                <td class="text-right" [className]="claseRevisionQA(producto)">{{producto.qaEstado | i18nSelect:
+                    qaEstadosMap}}</td>
                 <td class="text-right">
                     <p-button (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check" iconPos="left">
                     </p-button>
                 </td>
-                <td class="text-right">{{producto.qaEstado | i18nSelect: qaEstadosMap}}</td>
-                <!-- <td class="text-right">
-                    {{producto.qaErroresReportados}}
-                </td>
-                <td class="text-right">
-                    {{producto.qaErroesCorregidos}}
-                </td>
-                <td class="text-right">
-                    {{producto.qaObservaciones}}
-                </td> -->
                 <td class="text-right">
                     {{producto.estadoSolicitudModificacion | i18nSelect: estadoSolicitudMap}}
                 </td>
@@ -386,8 +363,9 @@
                             Observaciones QA
                         </div>
                         <div class="col-4">
-                            <!-- <p-button (onClick)="guardarObservacion(productoRevision)" label="Guardar observaciones"
-                                styleClass="p-buttont"></p-button> -->
+                            <button (click)="solicitarRevision()" [disabled]="productoRevision.qaEstado === 'SLQ'"
+                                pRipple pButton type="button" label="Solicitar revisión"
+                                class="p-button-success"></button>
                         </div>
                         <div class="field col-12">
                             {{productoRevision.qaObservaciones}}
@@ -412,6 +390,79 @@
                             <tr>
                                 <td>{{errorqa.errorReportado}}</td>
                                 <td>{{errorqa.estadoError | i18nSelect: qaEstadosErrorMap}}</td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </div>
+        </div>
+    </form>
+</p-dialog>
+<p-dialog header="Revisión observaciones" [(visible)]="mostrarObs" [breakpoints]="{'960px': '75vw'}"
+    [style]="{width: '55vw'}" [draggable]="true" [resizable]="false">
+    <form novalidate>
+        <div class="p-fluid">
+            <div class="field mt-2 px-4">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-6 md:col-2">
+                            Producto:
+                        </div>
+                        <div class="field col-6 md:col-3">
+                            {{productoRevision.nombre}}
+                        </div>
+                        <div class="field col-8 md:col-3">
+                            % Cumplimento:
+                        </div>
+                        <div class="field col-4 md:col-1">
+                            {{productoRevision.porcentajeCumplimiento}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field px-2">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-7 md:col-9">
+                            <input type="text" pInputText required [(ngModel)]="observacion"
+                                placeholder="Detalle de la observacion" name="error">
+                        </div>
+                        <div class="field col-5 md:col-3">
+                            <p-button (onClick)="agregarObservacion()" label="Guardar" styleClass="p-buttont">
+                            </p-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field px-2">
+                <div class="card">
+                    <p-table *ngIf="observacionesProducto.length !== 0" [value]="observacionesProducto"
+                        styleClass="p-datatable-sm">
+                        <ng-template pTemplate="caption">
+                            Detalle de observaciones
+                        </ng-template>
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th style="width: 70%;">Observación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-observacion>
+                            <tr>
+                                <td>
+                                    <input pInputText (change)="modificarObservacion(observacion)" type="text"
+                                        [(ngModel)]="observacion.texto"
+                                        name="observacion_{{observacion.codObservacion}}">
+                                </td>
+                                <td>
+                                    <div class="grid p-fluid mt-2">
+                                        <div class="field col-6 md:col-4">
+                                            <button (click)="eliminarObservacion(observacion)" pButton
+                                                icon="pi pi-trash" pRipple type="button"
+                                                class="p-button-rounded p-button-danger"></button>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                         </ng-template>
                     </p-table>

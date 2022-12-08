@@ -15,6 +15,11 @@
             <!-- <input pInputText required [(ngModel)]="nombreCreador" name="nombreCreador" placeholder="Nombre del usuario"
                 type="text" /> -->
         </div>
+        <div class="flex flex-row">
+            <p class="pt-3 mr-5">Estado QA</p>
+            <p-dropdown [showClear]="true" [options]="estadosQa" appendTo="body" [(ngModel)]="estadoQaSeleccionado"
+                placeholder="Estados QA" optionLabel="texto" optionValue="valor"></p-dropdown>
+        </div>
     </div>
     <div class="flex flex-row justify-content-around mt-3">
         <div class="flex flex-row">
@@ -23,9 +28,16 @@
                 [(ngModel)]="porcentajeCumplimiento" [min]="0" [max]="100"></p-inputNumber>
         </div>
         <div class="flex flex-row">
+            <p class="pt-3 mr-5">Año</p>
+            <p-dropdown (onChange)="llenarSemanas()" [options]="anios" appendTo="body" [(ngModel)]="anioSeleccionado"
+                placeholder="Año" name="anio">
+            </p-dropdown>
+        </div>
+        <div class="flex flex-row">
             <p class="pt-3 mr-5">Mes</p>
-            <p-dropdown [showClear]="true" [options]="meses" (onChange)="llenarSemanas()" appendTo="body"
-                [(ngModel)]="mesSeleccionado" placeholder="Meses" optionLabel="nombre" optionValue="numero">
+            <p-dropdown (onClear)="limpiarSemanas()" [showClear]="true" [options]="meses" (onChange)="llenarSemanas()"
+                appendTo="body" [(ngModel)]="mesSeleccionado" placeholder="Meses" optionLabel="nombre"
+                optionValue="numero">
             </p-dropdown>
         </div>
         <div class="flex flex-row">
@@ -36,12 +48,12 @@
     </div>
     <div class="flex flex-row justify-content-between mt-5">
         <button pButton pRipple label="Consultar" (click)="consultar()" class="m-auto w-2"></button>
-        <button pButton pRipple label="Consultar todo" (click)="obtenerProductos()" class="m-auto w-2"></button>
+        <button pButton pRipple label="Consultar todo" (click)="obtenerProductos('')" class="m-auto w-2"></button>
     </div>
 </div>
-<p-table [loading]="loading" [lazy]="true" (onLazyLoad)="cargarTabla()" [value]="productos" [paginator]="true"
-    [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]"
-    dataKey="codProducto" styleClass="p-datatable-sm">
+<p-table currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} productos" [value]="productos"
+    [paginator]="true" [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll"
+    [rowsPerPageOptions]="[10,25,50]" dataKey="codProducto" styleClass="p-datatable-sm">
     <ng-template pTemplate="header">
         <tr>
             <th>Semana</th>
@@ -53,9 +65,9 @@
             <th>Fecha real entrega</th>
             <th>% Cumplimiento</th>
             <th>Cronograma</th>
-            <th>Observaciones</th>
-            <th>Revisión QA</th>
+            <th>Observaciones recurso</th>
             <th>Estado QA</th>
+            <th>Revisión QA</th>
             <th>Errores Reportados</th>
             <th>Errores Corregidos</th>
             <th>Observaciones QA</th>
@@ -81,13 +93,18 @@
                     inputId="obs_{{producto.codProducto}}">
                 </p-checkbox>
             </td>
-            <td class="text-right">{{producto.observaciones}}</td>
+            <td class="text-right">
+                <p-button (click)="mostrarObservaciones(producto)" label="Ver" icon="pi pi-comments" iconPos="left">
+                </p-button>
+            </td>
+            <td [className]="claseRevisionQA(producto)">
+                <b>
+                    {{producto.qaEstado | i18nSelect: qaEstadosMap}}
+                </b>
+            </td>
             <td class="text-right">
                 <p-button (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check" iconPos="left">
                 </p-button>
-            </td>
-            <td class="text-right">
-                {{producto.qaEstado | i18nSelect: qaEstadosMap}}
             </td>
             <td class="text-right">
                 {{producto.qaErroresReportados}}
@@ -219,6 +236,55 @@
                                     </div>
                                 </td>
                             </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </div>
+        </div>
+    </form>
+</p-dialog>
+<p-dialog header="Revisión observaciones" [(visible)]="mostrarObs" [breakpoints]="{'960px': '75vw'}"
+    [style]="{width: '55vw'}" [draggable]="true" [resizable]="false">
+    <form novalidate>
+        <div class="p-fluid">
+            <div class="field mt-2 px-4">
+                <div class="flex flex-column">
+                    <div class="grid p-fluid mt-2">
+                        <div class="field col-6 md:col-2">
+                            Producto:
+                        </div>
+                        <div class="field col-6 md:col-3">
+                            {{productoRevision.nombre}}
+                        </div>
+                        <div class="field col-8 md:col-3">
+                            % Cumplimento:
+                        </div>
+                        <div class="field col-4 md:col-1">
+                            {{productoRevision.porcentajeCumplimiento}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field px-2">
+                <div class="card">
+                    <p-table [value]="observacionesProducto" styleClass="p-datatable-sm">
+                        <ng-template pTemplate="caption">
+                            Detalle de observaciones
+                        </ng-template>
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th style="width: 70%;">Observación</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-observacion>
+                            <tr>
+                                <td>
+                                    {{observacion.texto}}
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="emptymessage">
+                            <p>El producto no posee observaciones.</p>
                         </ng-template>
                     </p-table>
                 </div>

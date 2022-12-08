@@ -9,6 +9,7 @@ import { Perfil } from '../interfaces/perfil.interface';
 import { Jefatura } from '../interfaces/jefatura.interface';
 import { ErrorQA } from '../interfaces/errorQa.inteface';
 import { Empresa } from '../interfaces/empresa.interface';
+import { Observacion } from '../interfaces/observacion.interface';
 
 const URL: string = environment.baseUrl;
 
@@ -153,14 +154,16 @@ export class PmanagerService {
     return this.http.patch<Producto>(`${URL}/producto/estadoqa`, producto, { headers });
   }
 
-  obtenerProductosPorFiltro(codProyecto: number, nombreCreador: string, porcentaje: number, semana: string, nombreProducto: string): Observable<Producto[]> {
+  obtenerProductosPorFiltro(codProyecto: number, nombreCreador: string, porcentaje: number, mes: number, semana: string, nombreProducto: string, estadoQa: string): Observable<Producto[]> {
     const headers = this.obtenerHeader();
     const params: HttpParams = new HttpParams()
       .set("codProyecto", codProyecto)
       .set("nombreCreador", nombreCreador)
       .set("porcentaje", porcentaje)
+      .set("mes", mes)
       .set("semana", semana)
-      .set("nombreProducto", nombreProducto);
+      .set("nombreProducto", nombreProducto)
+      .set("estadoQa", estadoQa);
     return this.http.get<Producto[]>(`${URL}/producto/filtro`, { params, headers });
   }
 
@@ -242,6 +245,26 @@ export class PmanagerService {
   modificarClienteActivoEmpresa(empresa: Empresa): Observable<Empresa> {
     const headers = this.obtenerHeader();
     return this.http.patch<Empresa>(`${URL}/empresa`, empresa, { headers });
+  }
+
+  obtenerObservaciones(codProducto: number): Observable<Observacion[]> {
+    const headers = this.obtenerHeader();
+    return this.http.get<Observacion[]>(`${URL}/observacion/${codProducto}`, { headers });
+  }
+
+  crearObservacionProducto(observacion: Observacion): Observable<Observacion> {
+    const headers = this.obtenerHeader();
+    return this.http.post<Observacion>(`${URL}/observacion`, observacion, { headers });
+  }
+
+  modificarObservacionProducto(observacion: Observacion): Observable<Observacion> {
+    const headers = this.obtenerHeader();
+    return this.http.patch<Observacion>(`${URL}/observacion`, observacion, { headers });
+  }
+
+  eliminarObservacion(codObservacion: number): Observable<any> {
+    const headers = this.obtenerHeader();
+    return this.http.delete<any>(`${URL}/observacion/eliminar/${codObservacion}`, { headers });
   }
 
   private obtenerHeader() {

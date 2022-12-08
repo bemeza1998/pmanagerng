@@ -47,6 +47,7 @@ export class AutenticacionService {
                     this.usuarioAutenticado = {
                         codUsuario: resp.codUsuario!,
                         codPerfil: resp.codPerfil!,
+                        codJefatura: resp.codJefatura,
                         nombre: resp.nombre!,
                         apellido: resp.apellido!,
                         mail: resp.mail!,

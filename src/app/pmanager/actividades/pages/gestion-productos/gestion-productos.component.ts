@@ -6,6 +6,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { NgForm } from '@angular/forms';
 import { AutenticacionService } from 'src/app/pmanager/services/autenticacion.service';
 import { ErrorQA } from 'src/app/pmanager/interfaces/errorQa.inteface';
+import { Observacion } from '../../../interfaces/observacion.interface';
 
 interface Mes {
   numero: number,
@@ -33,13 +34,12 @@ export class GestionProductosComponent implements OnInit {
     codJefatura: 1,
     codProyecto: 0,
     nombre: '',
-    semana: this.obtenerSemana('siguiente').toISOString(),
+    semana: this.estructurarFecha(this.obtenerSemana('siguiente')),
     mes: this.obtenerSemana('siguiente').getMonth() + 1,
     fechaEstimadaEntrega: '',
     horasEstimadas: 0,
     porcentajeCumplimiento: 0,
     cronograma: false,
-    observaciones: '',
     entregadoQa: 0,
     estadoSolicitudModificacion: 'NOS',
     proyecto: { nombre: '' },
@@ -47,6 +47,7 @@ export class GestionProductosComponent implements OnInit {
   }];
 
   productoRevision: Producto = {
+    codProducto: 0,
     codProyecto: 0,
     nombre: '',
     mes: 0,
@@ -55,7 +56,6 @@ export class GestionProductosComponent implements OnInit {
     horasEstimadas: 0,
     porcentajeCumplimiento: 0,
     cronograma: false,
-    observaciones: '',
     entregadoQa: 0,
     estadoSolicitudModificacion: ''
   };
@@ -65,7 +65,11 @@ export class GestionProductosComponent implements OnInit {
   proyectoSeleccionado!: Proyecto;
   comentarioSolicitudModificacion: string = '';
   displayLoad: boolean = false;
+  mostrarObs: boolean = false;
   erroresReportados: ErrorQA[] = [];
+  clonedProducts: { [s: number]: Producto; } = {};
+  observacion: string = '';
+  observacionesProducto: Observacion[] = [];
 
   meses: Mes[] = this.incializarMeses();
   semanas: string[] = [];
@@ -93,7 +97,8 @@ export class GestionProductosComponent implements OnInit {
   qaEstadosMap = {
     'PRQ': 'Por revisar',
     'APQ': 'Aprobado por QA',
-    'REQ': 'Rechazado por QA'
+    'REQ': 'Rechazado por QA',
+    'SLQ': 'Solicitado para revisión QA'
   }
 
   qaEstadosErrorMap = {
@@ -118,12 +123,25 @@ export class GestionProductosComponent implements OnInit {
   }
 
   guardarProducto() {
+    this.productoNuevo[0].fechaEstimadaEntrega = this.estructurarFecha(new Date(this.productoNuevo[0].fechaEstimadaEntrega));
     this.pmanagerService.crearProducto(this.productoNuevo[0])
-      .subscribe(() => {
-        this.crearFormulario.reset();
-        this.obtenerProductos();
-      });
-
+      .subscribe({
+        next: (producto) => {
+          this.messageService.add({ severity: 'info', summary: 'Creación exitosa', detail: `Se ha creado el producto.` });
+          this.crearFormulario.reset({
+            horasEstimadas: 0,
+            porcentajeCumplimiento: 0,
+            cronograma: false,
+            observaciones: ''
+          });
+          //this.productos.unshift(producto);
+          this.obtenerProductos();
+        },
+        error: (err) => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: `Se ha producido un error.` });
+          console.log(err);
+        }
+      })
   }
 
   obtenerProyectos() {
@@ -163,6 +181,15 @@ export class GestionProductosComponent implements OnInit {
     });
   }
 
+  solicitarRevision() {
+    const producto = { ...this.productoRevision };
+    producto.qaEstado = 'SLQ';
+    this.pmanagerService.modificarEstadoQA(producto)
+      .subscribe((resp) => {
+        this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, resp);
+      })
+  }
+
   solicitarCambio(producto: Producto) {
     return (producto.estadoSolicitudModificacion === 'NOS'
       || producto.estadoSolicitudModificacion === 'NGE'
@@ -186,6 +213,55 @@ export class GestionProductosComponent implements OnInit {
       },
       key: 'cancelarSolicitud'
     });
+  }
+
+  mostrarObservaciones(producto: Producto) {
+    this.productoRevision = producto;
+    this.mostrarObs = true;
+    this.observacion = '';
+    this.pmanagerService.obtenerObservaciones(producto.codProducto!)
+      .subscribe({
+        next: (observaciones) => {
+          this.observacionesProducto = observaciones
+        },
+        error: (err) => {
+          console.log(err);
+        }
+      })
+  }
+
+  agregarObservacion() {
+    const obs: Observacion = {
+      codProducto: this.productoRevision.codProducto!,
+      codUsuario: this.usuario?.codUsuario!,
+      texto: this.observacion
+    }
+    this.pmanagerService.crearObservacionProducto(obs)
+      .subscribe(
+        (observacion) => {
+          console.log(observacion)
+          this.observacionesProducto.push(observacion);
+        }
+      )
+  }
+
+  modificarObservacion(observacion: Observacion) {
+    this.pmanagerService.modificarObservacionProducto(observacion)
+      .subscribe((resp) => {
+        this.observacionesProducto.splice(this.observacionesProducto.map(o => o.codObservacion).indexOf(observacion.codObservacion), 1, resp);
+      })
+  }
+
+  eliminarObservacion(observacion: Observacion) {
+    this.pmanagerService.eliminarObservacion(observacion.codObservacion!)
+      .subscribe(() => {
+        this.observacionesProducto.splice(this.observacionesProducto.map(o => o.codObservacion).indexOf(observacion.codObservacion), 1);
+      })
+  }
+
+  claseRevisionQA(producto: Producto) {
+    return producto.qaEstado === 'APQ' ? 'text-green-400' :
+      (producto.qaEstado === 'REQ' ? 'text-red-500' : '');
   }
 
   eliminar(producto: Producto) {
@@ -228,29 +304,29 @@ export class GestionProductosComponent implements OnInit {
       });
   }
 
-  cambiarObservaciones(producto: Producto) {
+  /*cambiarObservaciones(producto: Producto) {
     this.pmanagerService.modificarObservaciones(producto)
       .subscribe((resp) => {
         if (resp) {
           producto.observaciones = resp.observaciones;
         }
       })
-  }
+  }*/
 
   consultar() {
     this.pmanagerService.obtenerProductosPorFiltro(
       this.proyectoFiltro ?? '',
       '',
       this.porcentajeCumplimiento ?? '',
+      this.mesSeleccionado ?? '',
       this.semanaSeleccionada,
-      this.nombreProducto
+      this.nombreProducto,
+      ''
     )
       .subscribe((productos) => {
         this.productos = productos;
       });
   }
-
-  clonedProducts: { [s: number]: Producto; } = {};
 
   editar(producto: Producto) {
     this.llenarSemanasModificacionProducto();
@@ -272,6 +348,7 @@ export class GestionProductosComponent implements OnInit {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Las horas estimadas del producto son obligatorias.' });
       return;
     }
+    producto.fechaEstimadaEntrega = this.estructurarFecha(new Date(producto.fechaEstimadaEntrega));
     this.pmanagerService.modificarProducto(producto)
       .subscribe((resp) => {
         this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Se actualizó el producto' });

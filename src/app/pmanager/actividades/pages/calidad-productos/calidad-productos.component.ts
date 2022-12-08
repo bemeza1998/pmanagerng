@@ -6,10 +6,16 @@ import { PmanagerService } from '../../../services/pmanager.service';
 import { ErrorQA } from '../../../interfaces/errorQa.inteface';
 import { Usuario } from 'src/app/pmanager/interfaces/usuario.interface';
 import { AutenticacionService } from '../../../services/autenticacion.service';
+import { Observacion } from 'src/app/pmanager/interfaces/observacion.interface';
 
 interface Mes {
   numero: number,
   nombre: string
+}
+
+interface EstadoQa {
+  valor: string,
+  texto: string
 }
 
 @Component({
@@ -31,6 +37,11 @@ export class CalidadProductosComponent implements OnInit {
   semanaSeleccionada: string = '';
   porcentajeCumplimiento!: number;
   valorAnterior: number = 0;
+  mostrarObs: boolean = false;
+  observacionesProducto: Observacion[] = [];
+  estadosQa: EstadoQa[] = [];
+  anioSeleccionado: number = new Date().getFullYear();
+  anios: number[] = [];
 
   productoRevision: Producto = {
     codProyecto: 0,
@@ -41,7 +52,6 @@ export class CalidadProductosComponent implements OnInit {
     horasEstimadas: 0,
     porcentajeCumplimiento: 0,
     cronograma: false,
-    observaciones: '',
     entregadoQa: 0,
     estadoSolicitudModificacion: ''
   };
@@ -49,38 +59,53 @@ export class CalidadProductosComponent implements OnInit {
   erroresReportados: ErrorQA[] = [];
   usuarios: Usuario[] = [];
   usuarioSeleccionado: string = '';
-  loading: boolean = false;
+  estadoQaSeleccionado: string = '';
 
   qaEstadosMap = {
     'PRQ': 'Por revisar',
     'APQ': 'Aprobado por QA',
-    'REQ': 'Rechazado por QA'
+    'REQ': 'Rechazado por QA',
+    'SLQ': 'Solicitado para revisión QA'
   }
 
   constructor(
     private pmanagerService: PmanagerService,
     private messageService: MessageService,
     private autenticacionService: AutenticacionService
-  ) { }
-
-  cargarTabla() {
-    this.loading = true;
+  ) {
+    this.estadosQa = [
+      {
+        valor: 'PRQ',
+        texto: 'Por revisar'
+      },
+      {
+        valor: 'APQ',
+        texto: 'Aprobado por QA'
+      }, {
+        valor: 'REQ',
+        texto: 'Rechazado por QA'
+      }, {
+        valor: 'SLQ',
+        texto: 'Solicitado para revisión QA'
+      },
+    ];
+    this.anios = this.incializarAnios();
   }
 
+
   ngOnInit(): void {
-    this.obtenerProductos();
+    this.obtenerProductos(this.obtenerSemana());
     this.obtenerUsuarios();
-    this.pmanagerService.obtenerPorJefatura(1)
+    this.pmanagerService.obtenerPorJefatura(this.autenticacionService.usuarioAutenticado?.codJefatura!)
       .subscribe((proyectos) => {
         this.proyectos = proyectos;
       });
   }
 
-  obtenerProductos() {
-    this.pmanagerService.obtenerProductosTodos(this.obtenerSemana())
+  obtenerProductos(semana: string) {
+    this.pmanagerService.obtenerProductosTodos(semana)
       .subscribe((productos) => {
         this.productos = productos;
-        this.loading = false;
       })
   }
 
@@ -92,18 +117,49 @@ export class CalidadProductosComponent implements OnInit {
       });
   }
 
-  llenarSemanas() {
+  mostrarObservaciones(producto: Producto) {
+    this.productoRevision = producto;
+    this.mostrarObs = true;
+    this.pmanagerService.obtenerObservaciones(producto.codProducto!)
+      .subscribe({
+        next: (observaciones) => {
+          this.observacionesProducto = observaciones
+        },
+        error: (err) => {
+          console.log(err);
+        }
+      })
+  }
+
+  claseRevisionQA(producto: Producto) {
+    return producto.qaEstado === 'APQ' ? 'text-green-400' :
+      (producto.qaEstado === 'REQ' ? 'text-red-500' : '');
+  }
+
+  limpiarSemanas() {
     this.semanas = [];
-    let fecha = new Date(2022, this.mesSeleccionado - 1);
+  }
+
+  llenarSemanas() {
+    if (this.mesSeleccionado === null) {
+      return;
+    }
+    this.semanas = [];
+    let fecha = new Date(this.anioSeleccionado, this.mesSeleccionado - 1);
     let dia = fecha.getDay();
-    let diaMax: number = new Date(2022, this.mesSeleccionado, 0).getDate();
+    let diaMax: number = new Date(this.anioSeleccionado, this.mesSeleccionado, 0).getDate();
     for (let i = 1; i <= diaMax; i++) {
       if (dia === 4) {
-        this.semanas.push(`${fecha.getDate()}-${fecha.getMonth() + 1}-${fecha.getFullYear()}`);
+        this.semanas.push(this.estructurarFecha(fecha));
       }
       fecha.setDate(fecha.getDate() + 1);
       dia = fecha.getDay();
     }
+  }
+
+  incializarAnios() {
+    let fechaActual = new Date().getFullYear();
+    return [fechaActual - 1, fechaActual, fechaActual + 1]
   }
 
   obtenerSemana() {
@@ -124,15 +180,19 @@ export class CalidadProductosComponent implements OnInit {
       this.proyectoSeleccionado ?? '',
       this.usuarioSeleccionado ?? '',
       this.porcentajeCumplimiento ?? '',
-      this.semanaSeleccionada,
-      ''
+      this.mesSeleccionado ?? '',
+      this.semanaSeleccionada ?? '',
+      '',
+      this.estadoQaSeleccionado ?? ''
     ).subscribe((productos) => {
       this.productos = productos;
-      this.loading = false;
     });
   }
 
-  datosCalidad(producto: Producto) {
+  private estructurarFecha(fecha: Date) {
+    let diaAgregar = fecha.getDate() < 10 ? `0${fecha.getDate().toString()}` : fecha.getDate().toString();
+    let mesAgregar = fecha.getMonth() < 10 ? `0${(fecha.getMonth() + 1).toString()}` : (fecha.getMonth() + 1).toString();
+    return `${diaAgregar}-${mesAgregar}-${fecha.getFullYear()}`;
   }
 
   incializarMeses(): Mes[] {
@@ -182,7 +242,6 @@ export class CalidadProductosComponent implements OnInit {
     this.clonedProducts[producto.codProducto!] = { ...producto };
   }
 
-
   guardarCambios(producto: Producto) {
     delete this.clonedProducts[producto.codProducto!];
     this.pmanagerService.modificarProductoQA(producto)
@@ -201,7 +260,8 @@ export class CalidadProductosComponent implements OnInit {
     if (this.valorAnterior !== producto.porcentajeCumplimiento) {
       this.pmanagerService.modificarPorcentajeCumplimiento(producto, this.autenticacionService.usuarioAutenticado?.codUsuario!)
         .subscribe((resp) => {
-          producto.fechaRealEntrega = resp.fechaRealEntrega;
+          this.productos.splice(this.productos.map(p => p.codProducto).indexOf(resp.codProducto), 1, resp);
+          this.productoRevision = { ...resp };
         });
     }
   }

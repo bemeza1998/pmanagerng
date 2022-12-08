@@ -13,7 +13,6 @@ export interface Producto {
     fechaRealEntrega?: string,
     porcentajeCumplimiento: number,
     cronograma: boolean,
-    observaciones: string,
     entregadoQa: number,
     qaErroresReportados?: number,
     qaErroesCorregidos?: number,
