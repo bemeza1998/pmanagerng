@@ -34,5 +34,4 @@ export class ValidarTokenGuard implements CanActivate {
         })
       );
   }
-
 }

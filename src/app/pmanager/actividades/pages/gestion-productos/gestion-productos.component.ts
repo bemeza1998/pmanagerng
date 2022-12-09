@@ -17,8 +17,8 @@ interface Mes {
   selector: 'app-gestion-productos',
   templateUrl: './gestion-productos.component.html',
   styles: [`
-  .p-inputtext {
-      width: 150px !important;
+  .small {
+    width: 100%;
   }
 `],
   providers: [ConfirmationService, MessageService]
@@ -31,7 +31,7 @@ export class GestionProductosComponent implements OnInit {
 
   productoNuevo: Producto[] = [{
     codUsuario: this.usuario?.codUsuario!,
-    codJefatura: 1,
+    codJefatura: this.usuario?.codJefatura,
     codProyecto: 0,
     nombre: '',
     semana: this.estructurarFecha(this.obtenerSemana('siguiente')),
@@ -83,6 +83,8 @@ export class GestionProductosComponent implements OnInit {
   accion: string = 'SOL';
   fechaEntregaMin: Date = new Date(this.obtenerSemana('anterior'));
   fechaEntregaMax: Date = new Date(this.obtenerSemana('siguiente'));
+  anioSeleccionado: number = new Date().getFullYear();
+  anios: number[] = [];
 
   estadoSolicitudMap = {
     'SOL': 'Solicitado para editar',
@@ -98,7 +100,7 @@ export class GestionProductosComponent implements OnInit {
     'PRQ': 'Por revisar',
     'APQ': 'Aprobado por QA',
     'REQ': 'Rechazado por QA',
-    'SLQ': 'Solicitado para revisión QA'
+    'SLQ': 'Solicitado para revisión'
   }
 
   qaEstadosErrorMap = {
@@ -110,7 +112,15 @@ export class GestionProductosComponent implements OnInit {
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private autenticacionService: AutenticacionService
-  ) { }
+  ) {
+    this.anios = this.incializarAnios();
+  }
+
+  incializarAnios() {
+    let fechaActual = new Date().getFullYear();
+    return [fechaActual - 1, fechaActual, fechaActual + 1]
+  }
+
 
   seleccionarProyecto(producto: Producto) {
     let proyectoSeleccionado = this.proyectos.find((proyecto) => proyecto.codProyecto === producto.codProyecto)
@@ -134,7 +144,8 @@ export class GestionProductosComponent implements OnInit {
             cronograma: false,
             observaciones: ''
           });
-          //this.productos.unshift(producto);
+          this.productos.unshift(producto);
+          console.log(producto);
           this.obtenerProductos();
         },
         error: (err) => {
@@ -186,7 +197,9 @@ export class GestionProductosComponent implements OnInit {
     producto.qaEstado = 'SLQ';
     this.pmanagerService.modificarEstadoQA(producto)
       .subscribe((resp) => {
+        this.productoRevision = resp;
         this.productos.splice(this.productos.map(p => p.codProducto).indexOf(producto.codProducto), 1, resp);
+        this.messageService.add({ severity: 'info', summary: 'Solicitud realizada', detail: `Se ha solicitado la revisión del producto.` });
       })
   }
 
@@ -231,6 +244,10 @@ export class GestionProductosComponent implements OnInit {
   }
 
   agregarObservacion() {
+    if (this.observacionesProducto.length === 5) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se puede ingresar más de 5 observaciones.` });
+      return;
+    }
     const obs: Observacion = {
       codProducto: this.productoRevision.codProducto!,
       codUsuario: this.usuario?.codUsuario!,
@@ -304,17 +321,9 @@ export class GestionProductosComponent implements OnInit {
       });
   }
 
-  /*cambiarObservaciones(producto: Producto) {
-    this.pmanagerService.modificarObservaciones(producto)
-      .subscribe((resp) => {
-        if (resp) {
-          producto.observaciones = resp.observaciones;
-        }
-      })
-  }*/
-
   consultar() {
     this.pmanagerService.obtenerProductosPorFiltro(
+      this.usuario?.codUsuario!,
       this.proyectoFiltro ?? '',
       '',
       this.porcentajeCumplimiento ?? '',
@@ -393,13 +402,16 @@ export class GestionProductosComponent implements OnInit {
   }
 
   llenarSemanas() {
+    if (this.mesSeleccionado === null) {
+      return;
+    }
     this.semanas = [];
-    let fecha = new Date(new Date().getFullYear(), this.mesSeleccionado - 1);
+    let fecha = new Date(this.anioSeleccionado, this.mesSeleccionado - 1);
     let dia = fecha.getDay();
-    let diaMax: number = new Date(2022, this.mesSeleccionado, 0).getDate();
+    let diaMax: number = new Date(this.anioSeleccionado, this.mesSeleccionado, 0).getDate();
     for (let i = 1; i <= diaMax; i++) {
       if (dia === 4) {
-        this.semanas.push(`${fecha.getDate()}-${fecha.getMonth() + 1}-${fecha.getFullYear()}`);
+        this.semanas.push(this.estructurarFecha(fecha));
       }
       fecha.setDate(fecha.getDate() + 1);
       dia = fecha.getDay();

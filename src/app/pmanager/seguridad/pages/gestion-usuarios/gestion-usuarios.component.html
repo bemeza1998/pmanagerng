@@ -1,9 +1,10 @@
 <p-toast></p-toast>
 <h1 class="mb-4">Usuarios</h1>
 <button pButton pRipple label="Crear usuario" class="min-w-min mx-3 w-3" (click)="showLoadDialog()"></button>
-<p-table [loading]="loading" [lazy]="true" (onLazyLoad)="cargarTabla()" [value]="usuarios" [paginator]="true"
-    [rows]="10" [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]"
-    dataKey="codUsuario" editMode="row">
+<p-table [value]="usuarios" [paginator]="true"
+    currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} usuarios" [rows]="10"
+    [showCurrentPageReport]="true" responsiveLayout="scroll" [rowsPerPageOptions]="[10,25,50]" dataKey="codUsuario"
+    editMode="row">
     <ng-template pTemplate="header">
         <tr>
             <th>#</th>

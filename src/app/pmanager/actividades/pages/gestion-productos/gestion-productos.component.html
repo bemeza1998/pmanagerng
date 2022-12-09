@@ -31,10 +31,11 @@
 </p-confirmDialog>
 <p-toast></p-toast>
 <div class="mb-5">
-    <h1>Crear producto</h1>
+    <h1 class="mt-2 ml-2" style="font-family:Georgia, 'Times New Roman', Times, serif ;">Crear producto</h1>
     <form (ngSubmit)="guardarProducto()" #crearFormulario="ngForm" autocomplete="off">
-        <button [disabled]="crearFormulario.invalid" type="submit" class="mt-3 mb-3" pButton>Guardar producto</button>
-        <p-table [value]="productoNuevo" responsiveLayout="scroll">
+        <button [disabled]="crearFormulario.invalid" type="submit" class="ml-3 mt-3 mb-3" pButton>Guardar
+            producto</button>
+        <p-table [value]="productoNuevo" responsiveLayout="scroll" [tableStyle]="{'min-width': '40rem'}">
             <ng-template pTemplate="header">
                 <tr>
                     <th>Semana</th>
@@ -44,7 +45,6 @@
                     <th>Horas Estimadas Producto</th>
                     <th>% Cumplimiento</th>
                     <th>Cronograma</th>
-                    <th>Observaciones</th>
                 </tr>
             </ng-template>
             <ng-template pTemplate="body" let-producto>
@@ -85,15 +85,12 @@
                         <p-checkbox [(ngModel)]="producto.cronograma" [binary]="true" inputId="cro_crear"
                             name="cronograma"></p-checkbox>
                     </td>
-                    <td pEditableColumn>
-                        <input pInputText name="observaciones" type="text" [(ngModel)]="producto.observaciones">
-                    </td>
                 </tr>
             </ng-template>
         </p-table>
     </form>
 </div>
-<h1>Mis productos</h1>
+<h1 class="mt-2 ml-2" style="font-family:Georgia, 'Times New Roman', Times, serif ;">Mis productos</h1>
 <div class="flex flex-column mb-4" style="width: 1000px;">
     <div class="flex flex-row justify-content-around mt-3">
         <div class="flex flex-row">
@@ -108,15 +105,22 @@
         </div>
         <div class="flex flex-row">
             <p class="pt-3 mr-5">Porcentaje cumplimiento</p>
-            <input pInputText required [(ngModel)]="porcentajeCumplimiento" name="porcentajeCumplimiento"
-                placeholder="Porcentaje" type="number" />
+            <p-inputNumber [step]="10" name="porcentajeCumplimiento" [showButtons]="true"
+                [(ngModel)]="porcentajeCumplimiento" [min]="0" [max]="100"></p-inputNumber>
         </div>
     </div>
     <div class="flex flex-row justify-content-around mt-3">
         <div class="flex flex-row">
+            <p class="pt-3 mr-5">Año</p>
+            <p-dropdown (onChange)="llenarSemanas()" [options]="anios" appendTo="body" [(ngModel)]="anioSeleccionado"
+                placeholder="Año" name="anio">
+            </p-dropdown>
+        </div>
+        <div class="flex flex-row">
             <p class="pt-3 mr-5">Mes</p>
-            <p-dropdown [options]="meses" (onChange)="llenarSemanas()" appendTo="body" [(ngModel)]="mesSeleccionado"
-                placeholder="Meses" optionLabel="nombre" optionValue="numero"></p-dropdown>
+            <p-dropdown (onClear)="semanas = []" [options]="meses" (onChange)="llenarSemanas()" appendTo="body"
+                [(ngModel)]="mesSeleccionado" placeholder="Meses" optionLabel="nombre" optionValue="numero">
+            </p-dropdown>
         </div>
         <div class="flex flex-row">
             <p class="pt-3 mr-5">Semana</p>
@@ -134,8 +138,8 @@
     [showCurrentPageReport]="true" [rowsPerPageOptions]="[10,25,50]">
 
     <ng-template pTemplate="header">
-        <tr>
-            <th>Semana<span style="width: 100px; display: block;"></span>
+        <tr class="text-sm">
+            <th class="text-sm">Semana<span style="width: 80px; display: block;"></span>
             </th>
             <th>Proyecto<span style="width: 100px; display: block;"></span>
             </th>
@@ -146,7 +150,7 @@
             </th>
             <th>Horas Estimadas Producto
             </th>
-            <th>% Cumplimiento
+            <th class="w-2">% Cumplimiento
             </th>
             <th>Fecha real entrega
             </th>
@@ -248,13 +252,18 @@
                 </p-cellEditor>
             </td>
             <td class="text-right">
-                <p-button (click)="mostrarObservaciones(producto)" label="Ingresar" icon="pi pi-comments"
-                    iconPos="left">
+                <p-button class="p-button-sm" (click)="mostrarObservaciones(producto)" label="Ingresar"
+                    icon="pi pi-comments" iconPos="left">
                 </p-button>
             </td>
-            <td class="text-right">{{producto.qaEstado | i18nSelect: qaEstadosMap}}</td>
             <td class="text-right">
-                <p-button (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check" iconPos="left">
+                <b>
+                    {{producto.qaEstado | i18nSelect: qaEstadosMap}}
+                </b>
+            </td>
+            <td class="text-right">
+                <p-button class="p-button-sm" (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check"
+                    iconPos="left">
                 </p-button>
             </td>
             <td class="text-right">
@@ -272,14 +281,14 @@
             </td>
         </tr>
         <ng-template #noModificar>
-            <tr>
+            <tr class="text-sm">
                 <td style="width: 100px;" class="text-right">{{producto.semana }}</td>
                 <td class="text-right">{{producto.proyecto.nombre}}</td>
                 <td class="text-right">{{producto.nombre}}</td>
                 <td class="text-right">{{producto.fechaEstimadaEntrega }}</td>
                 <td class="text-right">{{producto.horasEstimadas}}</td>
                 <td class="text-right">
-                    <p-inputNumber [step]="10" (onFocus)="capturarAnterior(producto)"
+                    <p-inputNumber styleClass="w-full small" [step]="10" (onFocus)="capturarAnterior(producto)"
                         (onBlur)="verificarCumplimiento(producto,ri)" [showButtons]="true"
                         [(ngModel)]="producto.porcentajeCumplimiento" [min]="0" [max]="100">
                     </p-inputNumber>
@@ -290,15 +299,17 @@
                         [binary]="true" inputId="obs_{{producto.codProducto}}"></p-checkbox>
                 </td>
                 <td class="text-right">
-                    <p-button (click)="mostrarObservaciones(producto)" label="Ingresar" icon="pi pi-comments"
-                        iconPos="left">
-                    </p-button>
+                    <button pButton type="button" (click)="mostrarObservaciones(producto)" label="Ingresar"
+                        icon="pi pi-comments" class="p-button-sm"></button>
                 </td>
-                <td class="text-right" [className]="claseRevisionQA(producto)">{{producto.qaEstado | i18nSelect:
-                    qaEstadosMap}}</td>
+                <td class="text-right" [className]="claseRevisionQA(producto)">
+                    <b>
+                        {{producto.qaEstado | i18nSelect: qaEstadosMap}}
+                    </b>
+                </td>
                 <td class="text-right">
-                    <p-button (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check" iconPos="left">
-                    </p-button>
+                    <button pButton type="button" (click)="showLoadDialog(producto)" label="Revisar" icon="pi pi-check"
+                        class="p-button-sm"></button>
                 </td>
                 <td class="text-right">
                     {{producto.estadoSolicitudModificacion | i18nSelect: estadoSolicitudMap}}
@@ -363,7 +374,8 @@
                             Observaciones QA
                         </div>
                         <div class="col-4">
-                            <button (click)="solicitarRevision()" [disabled]="productoRevision.qaEstado === 'SLQ'"
+                            <button (click)="solicitarRevision()"
+                                [disabled]="productoRevision.qaEstado === 'SLQ' || productoRevision.qaEstado === 'APQ'"
                                 pRipple pButton type="button" label="Solicitar revisión"
                                 class="p-button-success"></button>
                         </div>
@@ -424,7 +436,7 @@
                 <div class="flex flex-column">
                     <div class="grid p-fluid mt-2">
                         <div class="field col-7 md:col-9">
-                            <input type="text" pInputText required [(ngModel)]="observacion"
+                            <input class="w-12" type="text" pInputText required [(ngModel)]="observacion"
                                 placeholder="Detalle de la observacion" name="error">
                         </div>
                         <div class="field col-5 md:col-3">

@@ -14,6 +14,7 @@ import { ModificacionProyectosComponent } from './pmanager/actividades/pages/mod
 import { GestionPerfilesComponent } from './pmanager/seguridad/pages/gestion-perfiles/gestion-perfiles.component';
 import { ValidarTokenGuard } from './guards/validar-token.guard';
 import { GestionEmpresasComponent } from './pmanager/actividades/pages/gestion-empresas/gestion-empresas.component';
+import { ValidarRutaGuard } from './guards/validar-ruta.guard';
 
 
 const routes: Routes = [
@@ -31,54 +32,55 @@ const routes: Routes = [
                 canActivate: [ValidarTokenGuard]
             },
             {
-                path: 'usuarios',
-                component: GestionUsuariosComponent,
-                canActivate: [ValidarTokenGuard]
-            },
-            {
-                path: 'perfiles',
-                component: GestionPerfilesComponent,
-                canActivate: [ValidarTokenGuard]
-            },
-            {
-                path: 'jefaturas',
-                component: GestionJefaturasComponent,
-                canActivate: [ValidarTokenGuard]
-            },
-            {
-                path: 'proyectos',
-                component: GestionProyectosComponent,
-                canActivate: [ValidarTokenGuard]
-            },
-            {
                 path: 'cambio-clave',
                 component: CambioClaveComponent,
                 canActivate: [ValidarTokenGuard]
             },
             {
+                path: 'usuarios',
+                component: GestionUsuariosComponent,
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
+            },
+            {
+                path: 'perfiles',
+                component: GestionPerfilesComponent,
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
+            },
+            {
+                path: 'jefaturas',
+                component: GestionJefaturasComponent,
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
+            },
+
+            {
+                path: 'proyectos',
+                component: GestionProyectosComponent,
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
+            },
+            {
                 path: 'productos',
                 component: GestionProductosComponent,
-                canActivate: [ValidarTokenGuard]
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
             },
             {
                 path: 'modificacion-productos',
                 component: ModificacionProductosComponent,
-                canActivate: [ValidarTokenGuard]
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
             },
             {
                 path: 'modificacion-proyectos',
                 component: ModificacionProyectosComponent,
-                canActivate: [ValidarTokenGuard]
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
             },
             {
                 path: 'empresas',
                 component: GestionEmpresasComponent,
-                canActivate: [ValidarTokenGuard]
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
             },
             {
                 path: 'calidad-productos',
                 component: CalidadProductosComponent,
-                canActivate: [ValidarTokenGuard]
+                canActivate: [ValidarTokenGuard, ValidarRutaGuard]
             }
         ]
     }

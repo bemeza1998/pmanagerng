@@ -154,9 +154,10 @@ export class PmanagerService {
     return this.http.patch<Producto>(`${URL}/producto/estadoqa`, producto, { headers });
   }
 
-  obtenerProductosPorFiltro(codProyecto: number, nombreCreador: string, porcentaje: number, mes: number, semana: string, nombreProducto: string, estadoQa: string): Observable<Producto[]> {
+  obtenerProductosPorFiltro(codUsuario: string, codProyecto: number, nombreCreador: string, porcentaje: number, mes: number, semana: string, nombreProducto: string, estadoQa: string): Observable<Producto[]> {
     const headers = this.obtenerHeader();
     const params: HttpParams = new HttpParams()
+      .set("codUsuario", codUsuario)
       .set("codProyecto", codProyecto)
       .set("nombreCreador", nombreCreador)
       .set("porcentaje", porcentaje)

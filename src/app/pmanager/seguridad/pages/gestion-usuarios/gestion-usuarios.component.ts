@@ -26,7 +26,6 @@ export class GestionUsuariosComponent implements OnInit {
   mail: string = '';
   usuariosClonados: { [s: string]: Usuario; } = {};
   estados: Estado[] = [];
-  loading: boolean = false;
 
   estadosMap = {
     'ACT': 'Activo',
@@ -71,12 +70,7 @@ export class GestionUsuariosComponent implements OnInit {
     this.pmanagerService.obtenerUsuarios('ALL')
       .subscribe((usuarios) => {
         this.usuarios = usuarios;
-        this.loading = false;
       })
-  }
-
-  cargarTabla() {
-    this.loading = true;
   }
 
   showLoadDialog(): void {

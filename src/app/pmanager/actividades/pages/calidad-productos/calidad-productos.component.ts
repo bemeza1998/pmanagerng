@@ -177,6 +177,7 @@ export class CalidadProductosComponent implements OnInit {
 
   consultar() {
     this.pmanagerService.obtenerProductosPorFiltro(
+      '',
       this.proyectoSeleccionado ?? '',
       this.usuarioSeleccionado ?? '',
       this.porcentajeCumplimiento ?? '',
