@@ -1,6 +1,6 @@
 # Pmanagerng - frontend
 
-El proyecto fue desarrollado con Angular CLI version 14.1.0.
+El proyecto fue desarrollado con Angular CLI version 14.1.0. Para instalar las dependencias necesarias, usar el comando npm install en el directorio donde se clonó el repositorio.
 
 ## Estructura de directorios del proyecto
 
